@@ -10,7 +10,7 @@
 #define COLOR_BLACK 0x0
 #define COLOR_BLUE 0x000000FF
 
-#define RAYS_AMOUNT 100
+#define RAYS_AMOUNT 50
 
 struct Ray{
     double x_start;
@@ -23,6 +23,8 @@ struct Circle {
     double y;
     double radius;
 };
+
+
 
 
 void FillCircle(SDL_Surface* surface, struct Circle circle, Uint32 color){
@@ -51,7 +53,7 @@ void generate_rays(struct Circle circle, struct Ray rays[RAYS_AMOUNT]){
 }
 
 
-void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], Uint32 color){
+void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], struct Circle objects[], Uint32 color){
     for(int i = 0; i < RAYS_AMOUNT; i++){
         struct Ray ray = rays[i];
 
@@ -67,7 +69,15 @@ void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], Uint32 color){
             SDL_Rect pixel_ray = (SDL_Rect) {x_draw, y_draw, 1, 1};
             SDL_FillRect(surface, &pixel_ray, color);
 
-            if(x_draw > WIDTH || x_draw < WIDTH || y_draw > HEIGHT || y_draw < HEIGHT){
+            for(int i = 0; i < 1; i++){
+                double radius_squared = pow(objects[i].radius, 2);
+                double distance_squared = pow(x_draw - objects[i].x, 2) + pow(y_draw - objects[i].y, 2); 
+                if(distance_squared < radius_squared){
+                    break;
+                }
+            }
+
+            if(x_draw > WIDTH || x_draw < 0 || y_draw > HEIGHT || y_draw < 0){
                 out_of_screen = 1;
             }
         }
@@ -86,7 +96,11 @@ int main(void){
     struct Circle circle = { 500, 200, 50 };
     struct Circle shadow_circle = { 300, 300, 75 };
 
-    struct Ray* rays;
+    struct Circle objects[1];
+
+    objects[0] = shadow_circle;
+
+    struct Ray rays[RAYS_AMOUNT];
     generate_rays(circle, rays);
 
     int running = 1;
@@ -107,7 +121,7 @@ int main(void){
         FillCircle(surface, circle, COLOR_WHITE);
         FillCircle(surface, shadow_circle, COLOR_BLUE);
         
-        FillRays(surface, rays, COLOR_WHITE);
+        FillRays(surface, rays, objects, COLOR_WHITE);
 
         SDL_UpdateWindowSurface(window);
     }
