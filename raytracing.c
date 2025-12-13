@@ -3,14 +3,16 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 
-#define WIDTH 900
-#define HEIGHT 600
+#define WIDTH 1200
+#define HEIGHT 900
 
 #define COLOR_WHITE 0xFFFFFFFF   // es un int, 4 bytes
 #define COLOR_BLACK 0x0
 #define COLOR_BLUE 0x000000FF
+#define COLOR_YELLOW 0xFFFFFF00
 
-#define RAYS_AMOUNT 50
+#define RAYS_AMOUNT 100
+#define OBJECTS_AMOUNT 2
 
 struct Ray{
     double x_start;
@@ -69,11 +71,11 @@ void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], struct Circle 
             SDL_Rect pixel_ray = (SDL_Rect) {x_draw, y_draw, 1, 1};
             SDL_FillRect(surface, &pixel_ray, color);
 
-            for(int i = 0; i < 1; i++){
+            for(int i = 0; i < OBJECTS_AMOUNT; i++){
                 double radius_squared = pow(objects[i].radius, 2);
                 double distance_squared = pow(x_draw - objects[i].x, 2) + pow(y_draw - objects[i].y, 2); 
                 if(distance_squared < radius_squared){
-                    break;
+                    hit_object = 1; 
                 }
             }
 
@@ -93,15 +95,22 @@ int main(void){
 
    
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
-    struct Circle circle = { 500, 200, 50 };
+    struct Circle circle = { 500, 200, 35 };
+    struct Circle light2 = {600, 800, 10};
+
+
+    struct Circle circle2 = {800, 400, 15}; 
     struct Circle shadow_circle = { 300, 300, 75 };
 
-    struct Circle objects[1];
+    struct Circle objects[OBJECTS_AMOUNT];
 
     objects[0] = shadow_circle;
+    objects[1] = circle2;  // prueba, despues hacer esto prolijo
 
     struct Ray rays[RAYS_AMOUNT];
+    struct Ray lightRays[RAYS_AMOUNT];
     generate_rays(circle, rays);
+    generate_rays(light2, lightRays);
 
     int running = 1;
     SDL_Event event;
@@ -118,10 +127,15 @@ int main(void){
         }
         
         SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
+        FillCircle(surface, circle2, COLOR_BLUE);
+
+
+        FillCircle(surface, light2, COLOR_YELLOW);
         FillCircle(surface, circle, COLOR_WHITE);
         FillCircle(surface, shadow_circle, COLOR_BLUE);
         
         FillRays(surface, rays, objects, COLOR_WHITE);
+        FillRays(surface, lightRays, objects, COLOR_YELLOW);
 
         SDL_UpdateWindowSurface(window);
     }
