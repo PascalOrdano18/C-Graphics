@@ -96,6 +96,7 @@ int main(void){
 
         SDL_UpdateWindowSurface(window);
     }
+    free(&sands);
 
     SDL_DestroyWindow(window);
     SDL_Quit();
