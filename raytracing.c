@@ -1,0 +1,119 @@
+
+#include <stdio.h>
+#include <SDL2/SDL.h>
+#include <math.h>
+
+#define WIDTH 900
+#define HEIGHT 600
+
+#define COLOR_WHITE 0xFFFFFFFF   // es un int, 4 bytes
+#define COLOR_BLACK 0x0
+#define COLOR_BLUE 0x000000FF
+
+#define RAYS_AMOUNT 100
+
+struct Ray{
+    double x_start;
+    double y_start;
+    double angle;
+};
+
+struct Circle {
+    double x;
+    double y;
+    double radius;
+};
+
+
+void FillCircle(SDL_Surface* surface, struct Circle circle, Uint32 color){
+    // circle.x - circle.radius te da el vertice superior izquierdo del cuadrado que contiene al circulo
+    
+    double radius_squared = pow(circle.radius, 2);
+    for(double x = circle.x - circle.radius; x <= circle.x + circle.radius; x++){
+        for(double y = circle.y - circle.radius; y <= circle.y + circle.radius; y++){
+            double distance_squared = pow(x - circle.x, 2) + pow(y - circle.y, 2); 
+            if(distance_squared < radius_squared){
+                SDL_Rect pixel = (SDL_Rect){x, y, 1, 1};   // dibujo un pixel 
+                SDL_FillRect(surface, &pixel, color);
+            }
+        }
+    }
+}
+
+// en cada momento, se generan N rays desde el centro del circulo, cada uno tiene su propio angulo y el mismo x_start y y_start
+void generate_rays(struct Circle circle, struct Ray rays[RAYS_AMOUNT]){
+    double max_angle = 2 * M_PI;
+    for(int i = 0; i < RAYS_AMOUNT; i++){
+        double angle = ((double) i / RAYS_AMOUNT) * 2 * M_PI;
+        struct Ray ray = {circle.x, circle.y, angle};
+        rays[i] = ray;
+    }
+}
+
+
+void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], Uint32 color){
+    for(int i = 0; i < RAYS_AMOUNT; i++){
+        struct Ray ray = rays[i];
+
+        int out_of_screen = 0;
+        int hit_object = 0;
+
+        double x_draw = ray.x_start;
+        double y_draw = ray.y_start; 
+        while(!out_of_screen && !hit_object){
+            x_draw += cos(ray.angle);
+            y_draw += sin(ray.angle);
+
+            SDL_Rect pixel_ray = (SDL_Rect) {x_draw, y_draw, 1, 1};
+            SDL_FillRect(surface, &pixel_ray, color);
+
+            if(x_draw > WIDTH || x_draw < WIDTH || y_draw > HEIGHT || y_draw < HEIGHT){
+                out_of_screen = 1;
+            }
+        }
+    }
+}
+
+int main(void){
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("Raytracing", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    
+    SDL_Surface* surface = SDL_GetWindowSurface(window);
+
+
+   
+    SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
+    struct Circle circle = { 500, 200, 50 };
+    struct Circle shadow_circle = { 300, 300, 75 };
+
+    struct Ray* rays;
+    generate_rays(circle, rays);
+
+    int running = 1;
+    SDL_Event event;
+    while (running) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {   // es el evento de cuando aprento la X
+                running = 0;
+            }
+            if(event.type == SDL_MOUSEMOTION && event.motion.state != 0){
+                circle.x = event.motion.x;
+                circle.y = event.motion.y;
+                generate_rays(circle, rays);
+            }
+        }
+        
+        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
+        FillCircle(surface, circle, COLOR_WHITE);
+        FillCircle(surface, shadow_circle, COLOR_BLUE);
+        
+        FillRays(surface, rays, COLOR_WHITE);
+
+        SDL_UpdateWindowSurface(window);
+    }
+
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
+
+}

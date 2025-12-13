@@ -1,0 +1,4 @@
+-std=c11
+-I/opt/homebrew/include
+-I/opt/homebrew/include/SDL2
+-D_THREAD_SAFE
