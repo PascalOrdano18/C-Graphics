@@ -22,14 +22,14 @@ struct Sand{
 int collides(struct Sand* sands, int sandAmount, int x, int y, int sand_index);
 
 void simulate_fall(struct Sand* sands, int sandAmount){
-    for(int i = 0; i < sandAmount; i++){
+    for(int i = sandAmount - 1; i >= 0; i--){
         int x = sands[i].x;
         int y = sands[i].y;
 
         int newY = y + SPEED;
         
         // si llegamos al fondo
-        if(newY >= HEIGHT) break;
+        if(newY >= HEIGHT) continue;
 
         if(!collides(sands, sandAmount, x, newY, i)){
             sands[i].y = newY;
@@ -67,7 +67,7 @@ int main(void){
             if(event.type == SDL_QUIT){
                 running = 0;
             }
-            if(event.type == SDL_MOUSEMOTION && event.motion.state != 0){
+            if(event.type == SDL_MOUSEMOTION){
                 // creo el grano de arena
                 
                 if(sandAmount >= allocatedSand){
@@ -76,7 +76,7 @@ int main(void){
                 }
                 sands[sandAmount].x = event.motion.x;
                 sands[sandAmount].y = event.motion.y;
-                sands[sandAmount].size = 1;
+                sands[sandAmount].size = 10;
 
                 sandAmount++;
             }
@@ -88,7 +88,7 @@ int main(void){
 
 
         for(int i = 0; i < sandAmount; i++){
-            SDL_Rect rect = (SDL_Rect) {sands[i].x, sands[i].y, sands[i].size };
+            SDL_Rect rect = (SDL_Rect) {sands[i].x, sands[i].y, sands[i].size, sands[i].size };
             SDL_FillRect(surface, &rect, COLOR_WHITE);
         }
 
