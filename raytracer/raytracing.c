@@ -130,12 +130,12 @@ int main(void){
         FillCircle(surface, circle2, COLOR_BLUE);
 
 
-        FillCircle(surface, light2, COLOR_YELLOW);
+        //FillCircle(surface, light2, COLOR_YELLOW);
         FillCircle(surface, circle, COLOR_WHITE);
         FillCircle(surface, shadow_circle, COLOR_BLUE);
         
         FillRays(surface, rays, objects, COLOR_WHITE);
-        FillRays(surface, lightRays, objects, COLOR_YELLOW);
+        //FillRays(surface, lightRays, objects, COLOR_YELLOW);
 
         SDL_UpdateWindowSurface(window);
     }
