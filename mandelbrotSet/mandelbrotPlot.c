@@ -9,24 +9,41 @@
 
 #define COLOR_BLACK 0x00000000
 #define COLOR_WHITE 0xFFFFFFFF
+#define COLOR_F 0xFFFF0000
 
-#define MAX_ITER 20
+#define MAX_ITER 200
 
 
 int check_pixel(double complex c);
 
+static inline Uint32 mandelbrot_color(SDL_PixelFormat* fmt, int it, int max_iter) {
+    if (it >= max_iter) {
+        return SDL_MapRGB(fmt, 0, 0, 0); // adentro: negro
+    }
+
+    // gradiente suave "fractal clásico"
+    double t = (double)it / (double)max_iter;
+
+    Uint8 r = (Uint8)(9.0  * (1 - t) * t * t * t * 255.0);
+    Uint8 g = (Uint8)(15.0 * (1 - t) * (1 - t) * t * t * 255.0);
+    Uint8 b = (Uint8)(8.5  * (1 - t) * (1 - t) * (1 - t) * t * 255.0);
+
+    return SDL_MapRGB(fmt, r, g, b);
+}
+
 void draw_mandelbrot(SDL_Surface* surface){
+    double scale = 3.0 / WIDTH;
+    
     for(int x = 0; x < WIDTH; x++){
         for(int y = 0; y < HEIGHT; y++){
-            double real = (x - WIDTH/2.0) * (3.0 / WIDTH);
-            double imag = (y - HEIGHT/2.0) * (2.0 / HEIGHT);
-            double complex c = real + imag * I;            
-            int n = 0;
 
-            int is_in_set = check_pixel(c);
-            Uint32 color = COLOR_WHITE;
-            
-            if (is_in_set) color = COLOR_BLACK; 
+            double real = (x - WIDTH/2.0) * scale - 0.5;
+            double imag = (y - HEIGHT/2.0) * scale;
+            double complex c = real + imag * I;            
+
+            int it = check_pixel(c);
+
+            Uint32 color = mandelbrot_color(surface->format, it, MAX_ITER); 
 
             SDL_Rect pixel = (SDL_Rect) { x, y, 1, 1 };
             SDL_FillRect(surface, &pixel, color);
@@ -37,14 +54,13 @@ void draw_mandelbrot(SDL_Surface* surface){
  
 int check_pixel(double complex c){
     double complex z = 0;
-    int i = 0;
-    for(; i < MAX_ITER; i++){
+    for(int i = 0; i < MAX_ITER; i++){
         z = z*z + c;
         if(cabs(z) > 2){
-            return 0; // aca exploto
+            return i; // aca exploto
         }    
     }
-    return i;
+    return MAX_ITER;
 } 
 
    
