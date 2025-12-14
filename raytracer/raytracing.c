@@ -11,7 +11,7 @@
 #define COLOR_BLUE 0x000000FF
 #define COLOR_YELLOW 0xFFFFFF00
 
-#define RAYS_AMOUNT 100
+#define RAYS_AMOUNT 500
 #define OBJECTS_AMOUNT 2
 
 struct Ray{
@@ -61,6 +61,9 @@ void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], struct Circle 
 
         int out_of_screen = 0;
         int hit_object = 0;
+
+        // x_start 
+        // y_start += sin(angle)
 
         double x_draw = ray.x_start;
         double y_draw = ray.y_start; 
