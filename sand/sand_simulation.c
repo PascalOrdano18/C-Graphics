@@ -22,6 +22,7 @@ struct Sand{
     Uint32 color;
 };
 
+
 int collides(struct Sand* sands, int sandAmount, int x, int y, int sand_index);
 
 void simulate_fall(struct Sand* sands, int sandAmount){
@@ -34,7 +35,9 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         // si llegamos al fondo
         if(newY + SAND_SIZE >= HEIGHT) continue;
 
-
+        if(!grid[y + 1][x]){
+            grid[y][x] = 0;
+        }
 
         if(!collides(sands, sandAmount, x, newY, i)){
             sands[i].y = newY;
@@ -58,6 +61,8 @@ int main(void){
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
+
+    static unsigned char grid[WIDTH / SAND_SIZE][HEIGHT / SAND_SIZE];
 
     int sandAmount = 0;
     int allocatedSand = 100;
@@ -84,7 +89,8 @@ int main(void){
                 sands[sandAmount].y = event.motion.y;
                 sands[sandAmount].size = SAND_SIZE;
                 sands[sandAmount].color = currentColor;
-
+                
+                grid[sands[sandAmount.].x][sands[sandAmount].y] = 1;
                 sandAmount++;
             }
             if (event.type == SDL_KEYDOWN) {
