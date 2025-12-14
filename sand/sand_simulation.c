@@ -52,12 +52,12 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         // abajo ocupado, hacemos random la caida
         int side = (rand() & 1) ? 1 : -1;
 
-        if(!grid[y+1][x + side]){
+        if(x <= GRID_WIDTH && !grid[y+1][x + side]){
             grid[y][x] = 0;
             grid[y + 1][x + side] = 1;
             sands[i].x = x + side;
             sands[i].y = y + 1;
-        } else if(!grid[y + 1][x - side]){
+        } else if(x > 1 && !grid[y + 1][x - side]){
             grid[y][x] = 0;
             grid[y + 1][x - side] = 1;
             sands[i].x = x - side;
@@ -100,13 +100,21 @@ int main(void){
                     allocatedSand += MEMORY_BLOCK;
                     sands = realloc(sands, allocatedSand * sizeof(struct Sand));
                 }
-                sands[sandAmount].x = event.motion.x;
-                sands[sandAmount].y = event.motion.y;
-                sands[sandAmount].size = SAND_SIZE;
-                sands[sandAmount].color = currentColor;
                 
-                grid[sands[sandAmount].y][sands[sandAmount].x] = 1;
-                sandAmount++;
+                int mx = event.motion.x / SAND_SIZE;
+                int my = event.motion.y / SAND_SIZE;
+
+                if(!grid[my][mx]){
+
+
+                    sands[sandAmount].x = mx;
+                    sands[sandAmount].y = my;
+                    sands[sandAmount].size = SAND_SIZE;
+                    sands[sandAmount].color = currentColor;
+                    
+                    grid[sands[sandAmount].y][sands[sandAmount].x] = 1;
+                    sandAmount++;
+                }
             }
             if (event.type == SDL_KEYDOWN) {
                 SDL_Keycode key = event.key.keysym.sym;
@@ -123,7 +131,7 @@ int main(void){
 
 
         for(int i = 0; i < sandAmount; i++){
-            SDL_Rect rect = (SDL_Rect) {sands[i].x, sands[i].y, sands[i].size, sands[i].size };
+            SDL_Rect rect = (SDL_Rect) {sands[i].x * SAND_SIZE, sands[i].y * SAND_SIZE, sands[i].size, sands[i].size };
             SDL_FillRect(surface, &rect, sands[i].color);
         }
 
