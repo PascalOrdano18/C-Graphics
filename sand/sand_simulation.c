@@ -1,58 +1,72 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <time.h>
 
 
 #define WIDTH 900
 #define HEIGHT 600
 
+#define SAND_SIZE 5
+
+#define GRID_WIDTH WIDTH / SAND_SIZE
+#define GRID_HEIGHT HEIGHT / SAND_SIZE
+
 #define COLOR_WHITE 0xFFFFFFFF
-#define COLOR_BLUE 0xFFFF0000
+#define COLOR_BLUE 0xFF0000FF
 #define COLOR_BLACK 0x00000000
 #define SPEED 1
-#define SAND_SIZE 5
 
 #define MEMORY_BLOCK 200
 
 
+static unsigned char grid[GRID_HEIGHT][GRID_WIDTH];
+
 struct Sand{
-    double x;
-    double y;
+    int x;
+    int y;
     int size;   // lado del cuadrado -> lo uso como pixel size = 1
     Uint32 color;
 };
 
 
-int collides(struct Sand* sands, int sandAmount, int x, int y, int sand_index);
 
 void simulate_fall(struct Sand* sands, int sandAmount){
     for(int i = sandAmount - 1; i >= 0; i--){
         int x = sands[i].x;
         int y = sands[i].y;
 
-        int newY = y + SPEED;
         
         // si llegamos al fondo
-        if(newY + SAND_SIZE >= HEIGHT) continue;
+        if(y + 1 >= GRID_HEIGHT) continue;
 
+        // abajo libree
         if(!grid[y + 1][x]){
             grid[y][x] = 0;
+            y++;
+            grid[y][x] = 1;
+            sands[i].y = y;
+            continue;   
+        }
+        
+        // abajo ocupado, hacemos random la caida
+        int side = (rand() & 1) ? 1 : -1;
+
+        if(!grid[y+1][x + side]){
+            grid[y][x] = 0;
+            grid[y + 1][x + side] = 1;
+            sands[i].x = x + side;
+            sands[i].y = y + 1;
+        } else if(!grid[y + 1][x - side]){
+            grid[y][x] = 0;
+            grid[y + 1][x - side] = 1;
+            sands[i].x = x - side;
+            sands[i].y = y + 1;
         }
 
-        if(!collides(sands, sandAmount, x, newY, i)){
-            sands[i].y = newY;
-        }
     }
 }
 
-int collides(struct Sand* sands, int sandAmount, int x, int y, int sand_index){
-    for(int i = 0; i < sandAmount; i++){
-        if(i == sand_index) continue;
-
-        if(x == sands[i].x && y + SAND_SIZE - 1 == sands[i].y) return 1;
-    }
-    return 0;
-}
 
 
 int main(void){
@@ -61,8 +75,9 @@ int main(void){
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
+    
+    srand((unsigned)time(NULL));
 
-    static unsigned char grid[WIDTH / SAND_SIZE][HEIGHT / SAND_SIZE];
 
     int sandAmount = 0;
     int allocatedSand = 100;
@@ -90,7 +105,7 @@ int main(void){
                 sands[sandAmount].size = SAND_SIZE;
                 sands[sandAmount].color = currentColor;
                 
-                grid[sands[sandAmount.].x][sands[sandAmount].y] = 1;
+                grid[sands[sandAmount].y][sands[sandAmount].x] = 1;
                 sandAmount++;
             }
             if (event.type == SDL_KEYDOWN) {
