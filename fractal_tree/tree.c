@@ -7,18 +7,23 @@
 #define HEIGHT 600
 
 #define ANGLE M_PI / 6   // 30 grados 
+#define COLOR_WHITE 0xFFFFFFFF
 
 
-void draw_line(int x, int y, double angle, int length){
-   if(length <= 1) return ; 
+void draw_line(SDL_Surface* surface, int x, int y, double angle, int length){
+    if(length <= 1) return ; 
     
     for(int i = 0 ; i < length; i++){
-        
+        x += cos(angle);
+        y += sin(angle);
+
+        SDL_Rect pixel = (SDL_Rect) { x, y, 1, 1 };
+        SDL_FillRect(surface, &pixel, COLOR_WHITE);
     }
     
-   length = length / 2;
-   draw_line(angle, length);
-   draw_line(-angle, length);
+    length = length / 2;
+    draw_line(surface, x, y, angle, length);
+    draw_line(surface, x, y, -angle, length);
 }
 
 int main(void){
@@ -38,7 +43,7 @@ int main(void){
             }
         }
         
-        draw_line(HEIGHT, WIDTH / 2, ANGLE, 100);
+        draw_line(surface, HEIGHT, WIDTH / 2, ANGLE, 100);
 
         SDL_UpdateWindowSurface(window);
     }
