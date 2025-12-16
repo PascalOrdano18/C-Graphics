@@ -10,7 +10,7 @@
 #define COLOR_WHITE 0xFFFFFFFF
 
 
-void draw_line(SDL_Surface* surface, int x, int y, double angle, int length){
+void draw_line(SDL_Surface* surface, double x, double y, double angle, int length){
     if(length <= 1) return ; 
     
     for(int i = 0 ; i < length; i++){
@@ -43,7 +43,7 @@ int main(void){
             }
         }
         
-        draw_line(surface, HEIGHT, WIDTH / 2, ANGLE, 100);
+        draw_line(surface, (double) HEIGHT, (double) WIDTH / 2, ANGLE, 100);
 
         SDL_UpdateWindowSurface(window);
     }
