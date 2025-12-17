@@ -6,9 +6,11 @@
 #define WIDTH 900
 #define HEIGHT 600
 
-#define ANGLE  M_PI / 4   // 30 grados 
+#define ANGLE  M_PI / 4  
 #define COLOR_WHITE 0xFFFFFFFF
+#define COLOR_BLACK 0x0000000
 
+double angleAdd = 0;
 
 void draw_line(SDL_Surface* surface, double x, double y, double angle, int length){
     if(length <= 1) return ; 
@@ -22,8 +24,8 @@ void draw_line(SDL_Surface* surface, double x, double y, double angle, int lengt
     }
     
     length = length / 2;
-    draw_line(surface, x, y, angle + ANGLE, length);
-    draw_line(surface, x, y, angle - ANGLE, length);
+    draw_line(surface, x, y, angle + angleAdd, length);
+    draw_line(surface, x, y, angle - angleAdd, length);
 }
 
 int main(void){
@@ -35,7 +37,6 @@ int main(void){
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
 
     int running = 1;
-    double angle = ANGLE;
     SDL_Event event;
     while(running){
         while(SDL_PollEvent(&event)){
@@ -45,12 +46,17 @@ int main(void){
             if(event.type == SDL_KEYDOWN){
                 SDL_Keycode key = event.key.keysym.sym;
                 if(key == SDLK_SPACE){
-                    angle += 0.1;
+                    SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
+                    angleAdd += 0.01;
+                }
+                if(key == SDLK_b){
+                    SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
+                    angleAdd -= 0.01;
                 }
             }
         }
         
-        draw_line(surface, (double) (WIDTH / 2), (double) HEIGHT, 2 *  angle, 250);
+        draw_line(surface, (double) (WIDTH / 2), (double) HEIGHT, 2 *  ANGLE, 250);
 
         SDL_UpdateWindowSurface(window);
     }
