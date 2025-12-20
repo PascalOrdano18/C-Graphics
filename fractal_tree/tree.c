@@ -19,7 +19,7 @@ void draw_line(SDL_Surface* surface, double x, double y, double angle, int lengt
         x += cos(angle);
         y -= sin(angle);
 
-        SDL_Rect pixel = (SDL_Rect) { x, y, 1, 1 };
+        SDL_Rect pixel = (SDL_Rect) { x, y, 2, 2 };
         SDL_FillRect(surface, &pixel, COLOR_WHITE);
     }
     

@@ -67,6 +67,10 @@ void simulate_fall(struct Sand* sands, int sandAmount){
     }
 }
 
+// BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
+void bfs(struct Sand* sands, ){
+    
+}
 
 
 int main(void){
