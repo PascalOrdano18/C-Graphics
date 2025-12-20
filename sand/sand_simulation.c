@@ -42,8 +42,7 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 
         // abajo libree
         if(!grid[y + 1][x]){
-            grid[y][x] = 0;
-            y++;
+            grid[y++][x] = 0;
             grid[y][x] = 1;
             sands[i].y = y;
             continue;   
@@ -51,26 +50,29 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         
         // abajo ocupado, hacemos random la caida
         int side = (rand() & 1) ? 1 : -1;
-
-        if(x <= GRID_WIDTH && !grid[y+1][x + side]){
+        int nx = x + side;
+        if(nx >= 0 && nx < GRID_WIDTH && !grid[y + 1][nx]) {
             grid[y][x] = 0;
-            grid[y + 1][x + side] = 1;
-            sands[i].x = x + side;
+            grid[y + 1][nx] = 1;
+            sands[i].x = nx;
             sands[i].y = y + 1;
-        } else if(x > 1 && !grid[y + 1][x - side]){
-            grid[y][x] = 0;
-            grid[y + 1][x - side] = 1;
-            sands[i].x = x - side;
-            sands[i].y = y + 1;
+        } else {
+            nx = x - side;
+            if(nx >= 0 && nx < GRID_WIDTH && !grid[y + 1][nx]) {
+                grid[y][x] = 0;
+                grid[y + 1][nx] = 1;
+                sands[i].x = nx;
+                sands[i].y = y + 1;
+            }
         }
-
     }
 }
 
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
-void bfs(struct Sand* sands, ){
+//void bfs(struct Sand* sands, ){
+ //   for(int y0 = 0; y0 < )
     
-}
+//}
 
 
 int main(void){
