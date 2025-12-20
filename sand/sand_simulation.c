@@ -30,7 +30,6 @@ struct Sand{
 };
 
 
-
 void simulate_fall(struct Sand* sands, int sandAmount){
     for(int i = sandAmount - 1; i >= 0; i--){
         int x = sands[i].x;
@@ -68,11 +67,28 @@ void simulate_fall(struct Sand* sands, int sandAmount){
     }
 }
 
+void bfsWrapper(struct Sand* sands){
+    for(int y0 = HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
+        if(grid[y0][0] = 0) continue;
+        bfs(sands, y0, 0);
+    }
+}
+
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
-//void bfs(struct Sand* sands, ){
- //   for(int y0 = 0; y0 < )
-    
-//}
+void bfs(struct Sand* sands, int y, int x){
+    Sand* visited = (Sand*)malloc(sizeof(Sand) * 100);
+    Sand* queue = (Sand*)malloc(sizeof(Sand) * 100);
+    int queueAmount = 0;
+    Uint32 color = sands[y][x].color;
+    queue[0] = sands[y][x]; // primer nodo 
+    while(queue){
+        for(int i = -1; i < 1; i++){
+            for(int j = -1; j < 1; j++){
+                if()
+            }
+        }
+    }
+}
 
 
 int main(void){
@@ -83,7 +99,6 @@ int main(void){
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
     
     srand((unsigned)time(NULL));
-
 
     int sandAmount = 0;
     int allocatedSand = 100;
