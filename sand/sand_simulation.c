@@ -45,7 +45,8 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 
         // abajo libree
         if(sandId[y + 1][x] == -1){
-            sandId[y++][x] = -1;
+            sandId[y][x] = -1;
+            y++
             sandId[y][x] = i;
             sands[i].y = y;
             continue;   
@@ -72,7 +73,7 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 }
 
 void bfsWrapper(struct Sand* sands){
-    for(int y0 = HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
+    for(int y0 = GRID_HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
         if(sandId[y0][0] == -1) continue;
         bfs(sands, y0, 0);
     }
@@ -81,15 +82,21 @@ void bfsWrapper(struct Sand* sands){
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
 void bfs(struct Sand* sands, int y, int x){
     struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
-    struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * 100);
-    int queueAmount = 0;
+
+    int queueLen = 100;
+    struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * queueLen);
+    int queueIndex = 0;
     Uint32 color = sands[sandId[y][x]].color;
-    queue[0] = sands[sandId[y][x]]; // primer nodo 
+    queue[queueIndex++] = sands[sandId[y][x]]; // primer nodo 
     while(queue){
         for(int i = -1; i < 1; i++){
             for(int j = -1; j < 1; j++){
-                if(sandId[y + i][x + j] == -1){  // si esa arena vecina es del mismo color
-
+                if()
+                if(sandId[y + i][x + j] != -1 && sands[sandId[y + i][x + j]].color == color){
+                    if(queueIndex == queueLen){
+                        queue = realloc(queue, queueLen + queueIndex);
+                    }
+                    queue[queueIndex] = sands[sandId[y + i][x + j]];
                 }
             }
         }
