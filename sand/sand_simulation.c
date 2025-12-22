@@ -35,7 +35,6 @@ struct Sand{
 
 void bfs(struct Sand* sands, int y, int x);
 
-
 void simulate_fall(struct Sand* sands, int sandAmount){
     for(int i = sandAmount - 1; i >= 0; i--){
         int x = sands[i].x;
@@ -83,7 +82,7 @@ void bfsWrapper(struct Sand* sands){
 
 char isVisited(struct Sand* visited, int visitedIndex, int x, int y){
     for(int i = 0; i < visitedIndex; i++){
-        if(visited[visitedIndex].x == x && visited[visitedIndex].y == y){
+        if(visited[i].x == x && visited[i].y == y){
             return 1;
         } 
     }
@@ -99,7 +98,6 @@ void bfs(struct Sand* sands, int start_y, int start_x){
             visitedGrid[yy][xx] = 0; // inicializo la grilla de visitados en cero
         }
     }
-
 
     int visitedLen = 100;
     int queueLen = 100;
@@ -135,17 +133,18 @@ void bfs(struct Sand* sands, int start_y, int start_x){
 
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
+                if(i == 0 && j == 0) continue;
                 int nx = x + j;
                 int ny = y + i;
                 if(nx < 0 || nx >= GRID_WIDTH || ny < 0 || ny >= GRID_HEIGHT) continue;
 
                 if(sandId[ny][nx] != -1 && sands[sandId[ny][nx]].color == color){
                     
-
                     int nid = sandId[ny][nx];
                     if(nid == -1) continue;
                     if(sands[nid].color != color) continue;
                     if(isVisited(visited, visitedIndex, nx, ny)) continue;
+                    visitedGrid[ny][nx] = 1;
 
                     // encolar
                     if(tail == queueLen){
@@ -163,19 +162,21 @@ void bfs(struct Sand* sands, int start_y, int start_x){
                 }
             }
         }
+    }
 
        if(reachedRight){
             for(int i = 0; i < visitedIndex; i++){
-                int vx = visited[visitedIndex].x;
-                int vy = visited[visitedIndex].y;
+                int vx = visited[i].x;
+                int vy = visited[i].y;
                 int vId = sandId[vy][vx];
 
                 if(vId != -1){
-                    sands[vId].color = COLOR_RED;
+                    sands[vId].color = COLOR_BLACK;
+                    sandId[vy][vx] = -1;
+                     
                 }
             }
         }
-    }
     free(queue);
     free(visited);
 }
