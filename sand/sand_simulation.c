@@ -73,7 +73,7 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 
 void bfsWrapper(struct Sand* sands){
     for(int y0 = HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
-        if(grid[y0][0] == 0) continue;
+        if(sandId[y0][0] == -1) continue;
         bfs(sands, y0, 0);
     }
 }
@@ -83,12 +83,12 @@ void bfs(struct Sand* sands, int y, int x){
     struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
     struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * 100);
     int queueAmount = 0;
-    Uint32 color = sands[y][x].color;
-    queue[0] = sands[y][x]; // primer nodo 
+    Uint32 color = sands[sandId[y][x]].color;
+    queue[0] = sands[sandId[y][x]]; // primer nodo 
     while(queue){
         for(int i = -1; i < 1; i++){
             for(int j = -1; j < 1; j++){
-                if(sands[y + i][x + j]){  // si esa arena vecina es del mismo color
+                if(sandId[y + i][x + j] == -1){  // si esa arena vecina es del mismo color
 
                 }
             }
