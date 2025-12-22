@@ -14,6 +14,7 @@
 
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
+#define COLOR_RED 0xFFFF0000
 #define COLOR_BLACK 0x00000000
 #define SPEED 1
 
@@ -73,47 +74,110 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 }
 
 void bfsWrapper(struct Sand* sands){
-    for(int y0 = GRID_HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
+    for(int y0 = GRID_HEIGHT - 1; y0 >= 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
         if(sandId[y0][0] == -1) continue;
         bfs(sands, y0, 0);
     }
 }
 
+
+char isVisited(struct Sand* visited, int visitedIndex, int x, int y){
+    for(int i = 0; i < visitedIndex; i++){
+        if(visited[visitedIndex].x == x && visited[visitedIndex].y == y){
+            return 1;
+        } 
+    }
+    return 0;
+}
+
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
-void bfs(struct Sand* sands, int y, int x){
+void bfs(struct Sand* sands, int start_y, int start_x){
+
+    static unsigned char visitedGrid[GRID_HEIGHT][GRID_WIDTH]; 
+    for(int yy = 0; yy < GRID_HEIGHT; yy++){
+        for(int xx = 0; xx < GRID_WIDTH; xx++){
+            visitedGrid[yy][xx] = 0; // inicializo la grilla de visitados en cero
+        }
+    }
+
+
     int visitedLen = 100;
     int queueLen = 100;
 
-    struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
+    int head = 0;
+    int tail = 0;
+    int visitedIndex = 0;
+
+    struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * visitedLen);
     struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * queueLen);
 
-    int queueIndex = 0;
-    int visitedIndex = 0;
-    Uint32 color = sands[sandId[y][x]].color;
-    queue[queueIndex++] = sands[sandId[y][x]]; // primer nodo 
-                                               
-    while(queueIndex){
+    int startId = sandId[start_y][start_x];
+    if(startId == -1){
+        free(visited);
+        free(queue);
+        return ;
+    }
+
+    Uint32 color = sands[startId].color;
+    queue[tail++] = sands[startId]; // primer nodo 
+    
+    int reachedRight = 0;
+
+    while(head < tail){
+        struct Sand current = queue[head++];
+        int x = current.x;
+        int y = current.y;
+
+        if(x == GRID_WIDTH - 1){
+            reachedRight = 1;
+            break;
+        }
+
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 int nx = x + j;
                 int ny = y + i;
-                if(nx < 0 || nx == GRID_WIDTH || ny < 0 || ny > GRID_HEIGHT) continue;
+                if(nx < 0 || nx >= GRID_WIDTH || ny < 0 || ny >= GRID_HEIGHT) continue;
 
                 if(sandId[ny][nx] != -1 && sands[sandId[ny][nx]].color == color){
-                    if(queueIndex == queueLen){
-                        queueLen = queueLen + queueIndex;
+                    
+
+                    int nid = sandId[ny][nx];
+                    if(nid == -1) continue;
+                    if(sands[nid].color != color) continue;
+                    if(isVisited(visited, visitedIndex, nx, ny)) continue;
+
+                    // encolar
+                    if(tail == queueLen){
+                        queueLen *= 2;
                         queue = realloc(queue, sizeof(struct Sand) * queueLen);
                     }
-                    queue[queueIndex++] = sands[sandId[ny][nx]];
+                    queue[tail++] = sands[nid];
+                    
+                    // push de visited
+                    if(visitedIndex == visitedLen){
+                        visitedLen *= 2;
+                        visited = realloc(visited, sizeof(struct Sand) * visitedLen);
+                    }
+                    visited[visitedIndex++] = sands[nid];
                 }
             }
         }
-        if(visitedIndex == visitedLen){
-            visitedLen = visitedLen + visitedIndex;
-            visited = realloc(visited, sizeof(struct Sand) * visitedLen);
+
+       if(reachedRight){
+            for(int i = 0; i < visitedIndex; i++){
+                int vx = visited[visitedIndex].x;
+                int vy = visited[visitedIndex].y;
+                int vId = sandId[vy][vx];
+
+                if(vId != -1){
+                    sands[vId].color = COLOR_RED;
+                }
+            }
         }
-        visited[visitedIndex++] = sands[sandId[y][x]];
     }
+    free(queue);
+    free(visited);
 }
 
 
@@ -177,6 +241,7 @@ int main(void){
         }
 
         simulate_fall(sands, sandAmount);
+        bfsWrapper(sands);
 
         SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
 
