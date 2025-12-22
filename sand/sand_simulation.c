@@ -4,8 +4,8 @@
 #include <time.h>
 
 
-#define WIDTH 900
-#define HEIGHT 600
+#define WIDTH 500
+#define HEIGHT 800
 
 #define SAND_SIZE 5
 
