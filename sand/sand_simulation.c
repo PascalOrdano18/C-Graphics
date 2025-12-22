@@ -31,6 +31,7 @@ struct Sand{
     Uint32 color;
 };
 
+
 void bfs(struct Sand* sands, int y, int x);
 
 
@@ -39,7 +40,6 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         int x = sands[i].x;
         int y = sands[i].y;
 
-        
         // si llegamos al fondo
         if(y + 1 >= GRID_HEIGHT) continue;
 
@@ -81,29 +81,38 @@ void bfsWrapper(struct Sand* sands){
 
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
 void bfs(struct Sand* sands, int y, int x){
-    struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
-
+    int visitedLen = 100;
     int queueLen = 100;
+
+    struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
     struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * queueLen);
+
     int queueIndex = 0;
+    int visitedIndex = 0;
     Uint32 color = sands[sandId[y][x]].color;
     queue[queueIndex++] = sands[sandId[y][x]]; // primer nodo 
+                                               
     while(queueIndex){
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 int nx = x + j;
                 int ny = y + i;
                 if(nx < 0 || nx == GRID_WIDTH || ny < 0 || ny > GRID_HEIGHT) continue;
+
                 if(sandId[ny][nx] != -1 && sands[sandId[ny][nx]].color == color){
                     if(queueIndex == queueLen){
                         queueLen = queueLen + queueIndex;
                         queue = realloc(queue, sizeof(struct Sand) * queueLen);
                     }
                     queue[queueIndex++] = sands[sandId[ny][nx]];
-
                 }
             }
         }
+        if(visitedIndex == visitedLen){
+            visitedLen = visitedLen + visitedIndex;
+            visited = realloc(visited, sizeof(struct Sand) * visitedLen);
+        }
+        visited[visitedIndex++] = sands[sandId[y][x]];
     }
 }
 
