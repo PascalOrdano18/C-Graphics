@@ -91,12 +91,15 @@ void bfs(struct Sand* sands, int y, int x){
     while(queue){
         for(int i = -1; i < 1; i++){
             for(int j = -1; j < 1; j++){
-                if()
-                if(sandId[y + i][x + j] != -1 && sands[sandId[y + i][x + j]].color == color){
+                int nx = x + j;
+                int ny = y + i;
+                if(nx < 0 || nx == GRID_WIDTH - 1 || ny < 0 || ny > GRID_HEIGHT - 1) continue;
+                if(sandId[ny][nx] != -1 && sands[sandId[ny][nx]].color == color){
                     if(queueIndex == queueLen){
                         queue = realloc(queue, queueLen + queueIndex);
                     }
-                    queue[queueIndex] = sands[sandId[y + i][x + j]];
+                    queue[queueIndex] = sands[sandId[ny][nx]];
+
                 }
             }
         }
