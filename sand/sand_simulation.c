@@ -118,6 +118,8 @@ void bfs(struct Sand* sands, int start_y, int start_x){
 
     Uint32 color = sands[startId].color;
     queue[tail++] = sands[startId]; // primer nodo 
+    visited[visitedIndex++] = sands[startId];
+    visitedGrid[start_y][startId] = 1;
     
     int reachedRight = 0;
 
@@ -144,7 +146,9 @@ void bfs(struct Sand* sands, int start_y, int start_x){
                     if(nid == -1) continue;
                     if(sands[nid].color != color) continue;
                     if(isVisited(visited, visitedIndex, nx, ny)) continue;
+                    if(visitedGrid[ny][nx]) continue;
                     visitedGrid[ny][nx] = 1;
+
 
                     // encolar
                     if(tail == queueLen){
