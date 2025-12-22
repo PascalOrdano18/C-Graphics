@@ -20,7 +20,7 @@
 #define MEMORY_BLOCK 200
 
 
-static unsigned char sandId[GRID_HEIGHT][GRID_WIDTH];  // grilla de sands
+static int sandId[GRID_HEIGHT][GRID_WIDTH];  // grilla de sands
                                                        // -1 si no hay sand
                                                        // id int si hay, con el que accedo a Sand*
 
@@ -46,7 +46,7 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         // abajo libree
         if(sandId[y + 1][x] == -1){
             sandId[y++][x] = -1;
-            sandId[y][x] = sandAmount;
+            sandId[y][x] = i;
             sands[i].y = y;
             continue;   
         }
@@ -56,14 +56,14 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         int nx = x + side;
         if(nx >= 0 && nx < GRID_WIDTH && sandId[y + 1][nx] == -1) {
             sandId[y][x] = -1;
-            sandId[y + 1][nx] = sandAmount;
+            sandId[y + 1][nx] = i;
             sands[i].x = nx;
             sands[i].y = y + 1;
         } else {
             nx = x - side;
             if(nx >= 0 && nx < GRID_WIDTH && sandId[y + 1][nx] == -1) {
                 sandId[y][x] = -1;
-                sandId[y + 1][nx] = sandAmount;
+                sandId[y + 1][nx] = i;
                 sands[i].x = nx;
                 sands[i].y = y + 1;
             }
