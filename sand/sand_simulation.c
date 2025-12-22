@@ -46,7 +46,7 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         // abajo libree
         if(sandId[y + 1][x] == -1){
             sandId[y][x] = -1;
-            y++
+            y++;
             sandId[y][x] = i;
             sands[i].y = y;
             continue;   
@@ -88,17 +88,18 @@ void bfs(struct Sand* sands, int y, int x){
     int queueIndex = 0;
     Uint32 color = sands[sandId[y][x]].color;
     queue[queueIndex++] = sands[sandId[y][x]]; // primer nodo 
-    while(queue){
-        for(int i = -1; i < 1; i++){
-            for(int j = -1; j < 1; j++){
+    while(queueIndex){
+        for(int i = -1; i <= 1; i++){
+            for(int j = -1; j <= 1; j++){
                 int nx = x + j;
                 int ny = y + i;
-                if(nx < 0 || nx == GRID_WIDTH - 1 || ny < 0 || ny > GRID_HEIGHT - 1) continue;
+                if(nx < 0 || nx == GRID_WIDTH || ny < 0 || ny > GRID_HEIGHT) continue;
                 if(sandId[ny][nx] != -1 && sands[sandId[ny][nx]].color == color){
                     if(queueIndex == queueLen){
-                        queue = realloc(queue, queueLen + queueIndex);
+                        queueLen = queueLen + queueIndex;
+                        queue = realloc(queue, sizeof(struct Sand) * queueLen);
                     }
-                    queue[queueIndex] = sands[sandId[ny][nx]];
+                    queue[queueIndex++] = sands[sandId[ny][nx]];
 
                 }
             }
