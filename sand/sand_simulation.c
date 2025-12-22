@@ -20,7 +20,9 @@
 #define MEMORY_BLOCK 200
 
 
-static unsigned char grid[GRID_HEIGHT][GRID_WIDTH];
+static unsigned char sandId[GRID_HEIGHT][GRID_WIDTH];  // grilla de sands
+                                                       // -1 si no hay sand
+                                                       // id int si hay, con el que accedo a Sand*
 
 struct Sand{
     int x;
@@ -28,6 +30,8 @@ struct Sand{
     int size;   // lado del cuadrado -> lo uso como pixel size = 1
     Uint32 color;
 };
+
+void bfs(struct Sand* sands, int y, int x);
 
 
 void simulate_fall(struct Sand* sands, int sandAmount){
@@ -40,9 +44,9 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         if(y + 1 >= GRID_HEIGHT) continue;
 
         // abajo libree
-        if(!grid[y + 1][x]){
-            grid[y++][x] = 0;
-            grid[y][x] = 1;
+        if(sandId[y + 1][x] == -1){
+            sandId[y++][x] = -1;
+            sandId[y][x] = sandAmount;
             sands[i].y = y;
             continue;   
         }
@@ -50,16 +54,16 @@ void simulate_fall(struct Sand* sands, int sandAmount){
         // abajo ocupado, hacemos random la caida
         int side = (rand() & 1) ? 1 : -1;
         int nx = x + side;
-        if(nx >= 0 && nx < GRID_WIDTH && !grid[y + 1][nx]) {
-            grid[y][x] = 0;
-            grid[y + 1][nx] = 1;
+        if(nx >= 0 && nx < GRID_WIDTH && sandId[y + 1][nx] == -1) {
+            sandId[y][x] = -1;
+            sandId[y + 1][nx] = sandAmount;
             sands[i].x = nx;
             sands[i].y = y + 1;
         } else {
             nx = x - side;
-            if(nx >= 0 && nx < GRID_WIDTH && !grid[y + 1][nx]) {
-                grid[y][x] = 0;
-                grid[y + 1][nx] = 1;
+            if(nx >= 0 && nx < GRID_WIDTH && sandId[y + 1][nx] == -1) {
+                sandId[y][x] = -1;
+                sandId[y + 1][nx] = sandAmount;
                 sands[i].x = nx;
                 sands[i].y = y + 1;
             }
@@ -69,22 +73,24 @@ void simulate_fall(struct Sand* sands, int sandAmount){
 
 void bfsWrapper(struct Sand* sands){
     for(int y0 = HEIGHT - 1; y0 > 0; y0--){      // en realidad deberia cortar cuando no tiene sand ese casillero
-        if(grid[y0][0] = 0) continue;
+        if(grid[y0][0] == 0) continue;
         bfs(sands, y0, 0);
     }
 }
 
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
 void bfs(struct Sand* sands, int y, int x){
-    Sand* visited = (Sand*)malloc(sizeof(Sand) * 100);
-    Sand* queue = (Sand*)malloc(sizeof(Sand) * 100);
+    struct Sand* visited = (struct Sand*)malloc(sizeof(struct Sand) * 100);
+    struct Sand* queue = (struct Sand*)malloc(sizeof(struct Sand) * 100);
     int queueAmount = 0;
     Uint32 color = sands[y][x].color;
     queue[0] = sands[y][x]; // primer nodo 
     while(queue){
         for(int i = -1; i < 1; i++){
             for(int j = -1; j < 1; j++){
-                if()
+                if(sands[y + i][x + j]){  // si esa arena vecina es del mismo color
+
+                }
             }
         }
     }
@@ -99,6 +105,12 @@ int main(void){
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
     
     srand((unsigned)time(NULL));
+    
+    for(int i = 0; i < GRID_HEIGHT; i++){
+        for(int j = 0; j < GRID_WIDTH; j++){
+            sandId[i][j] = -1;
+        }
+    }
 
     int sandAmount = 0;
     int allocatedSand = 100;
@@ -125,15 +137,13 @@ int main(void){
                 int mx = event.motion.x / SAND_SIZE;
                 int my = event.motion.y / SAND_SIZE;
 
-                if(!grid[my][mx]){
-
-
+                if(sandId[my][mx] == -1){
                     sands[sandAmount].x = mx;
                     sands[sandAmount].y = my;
                     sands[sandAmount].size = SAND_SIZE;
                     sands[sandAmount].color = currentColor;
                     
-                    grid[sands[sandAmount].y][sands[sandAmount].x] = 1;
+                    sandId[my][mx] = sandAmount;
                     sandAmount++;
                 }
             }
