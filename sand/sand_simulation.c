@@ -120,7 +120,7 @@ void bfs(struct Sand* sands, int start_y, int start_x){
     Uint32 color = sands[startId].color;
     queue[tail++] = sands[startId]; // primer nodo 
     visited[visitedIndex++] = sands[startId];
-    visitedGrid[start_y][startId] = 1;
+    visitedGrid[start_y][start_x] = 1;
     
     int reachedRight = 0;
 
@@ -194,6 +194,13 @@ int main(void){
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
+
+    const Uint32 RENDER_MS = 16; // 60 FPS
+    const Uint32 SIM_MS = 20;    // ticks de física por segundo
+    
+    Uint32 last = SDL_GetTicks();
+    Uint32 acc = 0;
+
     
     srand((unsigned)time(NULL));
     
@@ -213,6 +220,17 @@ int main(void){
     int running = 1;
     SDL_Event event;
     while(running){
+
+
+        Uint32 now = SDL_GetTicks();
+        Uint32 dt = now - last;
+        last = now;
+
+        // por seguridad si hiciste alt-tab o se colgó un frame:
+        if (dt > 250) dt = 250;
+
+        acc += dt;
+
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 running = 0;
@@ -247,11 +265,13 @@ int main(void){
             }
         }
 
-        simulate_fall(sands, sandAmount);
-        bfsWrapper(sands);
+        while(acc >= SIM_MS){
+            simulate_fall(sands, sandAmount);
+            bfsWrapper(sands);
+            acc -= SIM_MS;
+        }
 
         SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
-
 
         for(int i = 0; i < sandAmount; i++){
             if(sands[i].x == -1 || sands[i].y == -1) continue ;
