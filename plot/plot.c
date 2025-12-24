@@ -27,8 +27,8 @@ void draw_axis(SDL_Surface* surface){
 
 // sin(x) + 10 + x**2 / x * cos(x)
 void draw_function(SDL_Surface* surface){
-    for(double x = -WIDTH/2; x < WIDTH / 2; x+=0.1){
-        double y = x*x;
+    for(double x = -WIDTH/2; x < WIDTH / 2; x+=0.01){
+        double y = sin(x) * 50;
         plot_normalized_point(surface, x, y);
     }
 }

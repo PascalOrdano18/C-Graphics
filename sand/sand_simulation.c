@@ -37,6 +37,7 @@ void bfs(struct Sand* sands, int y, int x);
 
 void simulate_fall(struct Sand* sands, int sandAmount){
     for(int i = sandAmount - 1; i >= 0; i--){
+        if(sands[i].x == -1 || sands[i].y == -1) continue;
         int x = sands[i].x;
         int y = sands[i].y;
 
@@ -176,8 +177,9 @@ void bfs(struct Sand* sands, int start_y, int start_x){
 
                 if(vId != -1){
                     sands[vId].color = COLOR_BLACK;
+                    sands[vId].x = -1;
+                    sands[vId].y = -1;
                     sandId[vy][vx] = -1;
-                     
                 }
             }
         }
@@ -252,6 +254,7 @@ int main(void){
 
 
         for(int i = 0; i < sandAmount; i++){
+            if(sands[i].x == -1 || sands[i].y == -1) continue ;
             SDL_Rect rect = (SDL_Rect) {sands[i].x * SAND_SIZE, sands[i].y * SAND_SIZE, sands[i].size, sands[i].size };
             SDL_FillRect(surface, &rect, sands[i].color);
         }
