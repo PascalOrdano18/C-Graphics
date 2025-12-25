@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <time.h>
 
+#include "piece.h"
 
 #define WIDTH 500
 #define HEIGHT 800
@@ -93,7 +94,7 @@ char isVisited(struct Sand* visited, int visitedIndex, int x, int y){
 // BFS de lado a lado chequeando por si la arena de mismo color cruza todo el mapa
 void bfs(struct Sand* sands, int start_y, int start_x){
 
-    static unsigned char visitedGrid[GRID_HEIGHT][GRID_WIDTH]; 
+    static unsigned char visitedGrid[GRID_HEIGHT][GRID_WIDTH];
     for(int yy = 0; yy < GRID_HEIGHT; yy++){
         for(int xx = 0; xx < GRID_WIDTH; xx++){
             visitedGrid[yy][xx] = 0; // inicializo la grilla de visitados en cero
@@ -217,11 +218,11 @@ int main(void){
     Uint32 currentColor = COLOR_WHITE;
     int color = 0;
 
+    Piece current_piece = piece_spawn(GRID_WIDTH);
+
     int running = 1;
     SDL_Event event;
     while(running){
-
-
         Uint32 now = SDL_GetTicks();
         Uint32 dt = now - last;
         last = now;
@@ -263,6 +264,19 @@ int main(void){
                     currentColor = (currentColor == COLOR_WHITE) ? COLOR_BLUE : COLOR_WHITE;
                 }
             }
+        }
+
+        static Uint32 lastDrop = 0;
+        Uint32 nowp = SDL_GetTicks();
+        if(now - lastDrop > 80){
+            lastDrop = nowp;
+            if(current_piece.active) current_piece.y += 1;
+        }
+
+        if(current_piece.active){
+            SDL_Rect piece_rect = (SDL_Rect) { current_piece.x * SAND_SIZE, current_piece.y * SAND_SIZE, SAND_SIZE, SAND_SIZE };
+
+            SDL_FillRect(surface, &piece_rect, COLOR_RED);
         }
 
         while(acc >= SIM_MS){
