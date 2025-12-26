@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#define SAND_LEN 5
 #define COLORS 4
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
@@ -19,3 +20,4 @@ typedef struct{
 static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_GREEN, COLOR_RED};
 
 Piece piece_spawn(int grid_width);
+void draw_piece(SDL_Surface* surface, Piece piece);

@@ -3,11 +3,9 @@
 
 #include "piece.h"
 
-
 Piece piece_spawn(int grid_width){
-    srand((unsigned)time(NULL));
-
-    int shape = rand() % 7;  
+    //int shape = rand() % 7;  
+    int shape = 0; // hardcodeado para que sea una linea ahora.
     Uint32 color = colors[rand() % COLORS];
    
     Piece piece;
@@ -23,7 +21,16 @@ Piece piece_spawn(int grid_width){
 }
 
 
-
+void draw_piece(SDL_Surface* surface, Piece piece){
+    switch (piece.shape) {
+        case 0: // I
+            SDL_Rect line = (SDL_Rect) { piece.x, piece.y, piece.x + SAND_LEN, piece.y + (SAND_LEN * 4) };
+            SDL_FillRect(surface, &line, piece.color);
+            break;
+        break;
+    }
+    
+}
 
 
 

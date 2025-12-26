@@ -266,18 +266,7 @@ int main(void){
             }
         }
 
-        static Uint32 lastDrop = 0;
-        Uint32 nowp = SDL_GetTicks();
-        if(now - lastDrop > 80){
-            lastDrop = nowp;
-            if(current_piece.active) current_piece.y += 1;
-        }
-
-        if(current_piece.active){
-            SDL_Rect piece_rect = (SDL_Rect) { current_piece.x * SAND_SIZE, current_piece.y * SAND_SIZE, SAND_SIZE, SAND_SIZE };
-
-            SDL_FillRect(surface, &piece_rect, COLOR_RED);
-        }
+        
 
         while(acc >= SIM_MS){
             simulate_fall(sands, sandAmount);
@@ -291,6 +280,17 @@ int main(void){
             if(sands[i].x == -1 || sands[i].y == -1) continue ;
             SDL_Rect rect = (SDL_Rect) {sands[i].x * SAND_SIZE, sands[i].y * SAND_SIZE, sands[i].size, sands[i].size };
             SDL_FillRect(surface, &rect, sands[i].color);
+        }
+
+        static Uint32 lastDrop = 0;
+        Uint32 nowp = SDL_GetTicks();
+        if(nowp - lastDrop > 80){
+            lastDrop = nowp;
+            if(current_piece.active) current_piece.y += 1;
+        }
+
+        if(current_piece.active){
+            draw_piece(surface, current_piece);
         }
 
         SDL_UpdateWindowSurface(window);
