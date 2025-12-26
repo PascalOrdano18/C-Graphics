@@ -24,7 +24,7 @@ Piece piece_spawn(int grid_width){
 void draw_piece(SDL_Surface* surface, Piece piece){
     switch (piece.shape) {
         case 0: // I
-            SDL_Rect line = (SDL_Rect) { piece.x, piece.y, piece.x + SAND_LEN, piece.y + (SAND_LEN * 4) };
+            SDL_Rect line = (SDL_Rect) { piece.x, piece.y, SAND_LEN * 4, (SAND_LEN * 4 *4) };
             SDL_FillRect(surface, &line, piece.color);
             break;
         break;
