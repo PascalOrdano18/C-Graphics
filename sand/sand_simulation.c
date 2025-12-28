@@ -266,8 +266,6 @@ int main(void){
             }
         }
 
-        
-
         while(acc >= SIM_MS){
             simulate_fall(sands, sandAmount);
             bfsWrapper(sands);
@@ -287,7 +285,7 @@ int main(void){
         if(nowp - lastDrop > 80){
             lastDrop = nowp;
             if(current_piece.active) current_piece.y += 1;
-        }
+        
 
         if(current_piece.active){
             draw_piece(surface, current_piece);

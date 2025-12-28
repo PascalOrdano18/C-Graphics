@@ -17,7 +17,6 @@ void draw_axis(SDL_Surface* surface){
     for(int i = 0; i < WIDTH; i++){
         SDL_Rect point = (SDL_Rect) { i, y, 1, 1 };
         SDL_FillRect(surface, &point, COLOR_GRAY);
-   
     }
     for(int i = 0; i < HEIGHT; i++){
         SDL_Rect point = (SDL_Rect) { x, i, 1, 1 };
@@ -27,8 +26,8 @@ void draw_axis(SDL_Surface* surface){
 
 // sin(x) + 10 + x**2 / x * cos(x)
 void draw_function(SDL_Surface* surface){
-    for(double x = -WIDTH/2; x < WIDTH / 2; x+=0.01){
-        double y = sin(x) * 50;
+    for(double x = -WIDTH/2; x < WIDTH / 2; x += 0.001){
+        double y = sin(x);
         plot_normalized_point(surface, x, y);
     }
 }
