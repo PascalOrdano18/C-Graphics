@@ -202,7 +202,7 @@ int main(void){
     Uint32 currentColor = COLOR_WHITE;
     int color = 0;
 
-    Piece current_piece = piece_spawn(GRID_WIDTH);
+    Piece current_piece = piece_spawn();
 
     int running = 1;
     SDL_Event event;
@@ -272,6 +272,10 @@ int main(void){
             lastDrop = nowp;
             if(current_piece.active) current_piece.y += 1;
         
+        }
+        if(current_piece.y >= HEIGHT - SAND_SIZE){
+            current_piece.active = 0;
+            //piece_spawn();
         }
         if(current_piece.active){
             draw_piece(surface, current_piece);

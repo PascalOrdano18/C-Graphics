@@ -94,5 +94,6 @@ static const int SHAPES[7][4][4][2] = {
 
 
 
-Piece piece_spawn(int grid_width);
+Piece piece_spawn();
 void draw_piece(SDL_Surface* surface, Piece piece);
+void piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]);

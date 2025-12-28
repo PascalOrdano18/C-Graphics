@@ -3,14 +3,13 @@
 
 #include "piece.h"
 
-Piece piece_spawn(int grid_width){
-    //int shape = rand() % 7;  
-    int shape = 0; // hardcodeado para que sea una linea ahora.
+Piece piece_spawn(){
+    int shape = rand() % 6;     
     Uint32 color = colors[rand() % COLORS];
    
     Piece piece;
 
-    piece.x = grid_width / 2;
+    piece.x = GRID_WIDTH / 2;
     piece.y = 0;
     piece.shape = shape;
     piece.color = color;
@@ -36,10 +35,24 @@ void draw_piece(SDL_Surface* surface, Piece piece){
         int x0 = piece.x + SHAPES[piece.shape][piece.rot][i][0];
         int y0 = piece.y + SHAPES[piece.shape][piece.rot][i][1];
 
-         SDL_Rect block = (SDL_Rect) { x0 * SAND_SIZE, y0 * (SAND_SIZE + 20), SAND_SIZE, SAND_SIZE };
+         SDL_Rect block = (SDL_Rect) { x0 * SAND_SIZE, y0 * SAND_SIZE, SAND_SIZE, SAND_SIZE };
         SDL_FillRect(surface, &block, piece.color);
     }
 }
 
 
+
+void piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]){
+    for(int i = 0; i < 4; i++){
+        int gx = piece.x + SHAPES[piece.shape][piece.rot][i][0];
+        int gy = 1 + piece.y + SHAPES[piece.shape][piece.rot][i][1];
+
+        if(gy >= GRID_HEIGHT || sandId[gy][gx] != -1){
+            piece.active = 0;
+            return ;
+        };
+    } 
+
+    return ;
+}
 
