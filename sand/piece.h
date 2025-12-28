@@ -19,6 +19,17 @@
 
 #define MEMORY_BLOCK 2000
 
+// -1 si no hay sand, id int si hay
+int sandId[GRID_HEIGHT][GRID_WIDTH];
+
+
+struct Sand {
+    int x;
+    int y;
+    int size;   // lado del cuadrado 
+    Uint32 color; 
+};
+
 typedef struct{
     int x;
     int y;
@@ -96,4 +107,5 @@ static const int SHAPES[7][4][4][2] = {
 
 Piece piece_spawn();
 void draw_piece(SDL_Surface* surface, Piece piece);
-void piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]);
+int piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]);
+void make_piece_sand(Piece piece, struct Sand** sands, int* sandAmount, int* allocatedSand);

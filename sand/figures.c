@@ -42,17 +42,39 @@ void draw_piece(SDL_Surface* surface, Piece piece){
 
 
 
-void piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]){
+int piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]){
     for(int i = 0; i < 4; i++){
         int gx = piece.x + SHAPES[piece.shape][piece.rot][i][0];
         int gy = 1 + piece.y + SHAPES[piece.shape][piece.rot][i][1];
 
         if(gy >= GRID_HEIGHT || sandId[gy][gx] != -1){
-            piece.active = 0;
-            return ;
-        };
+            return 0;
+        }
     } 
 
-    return ;
+    return 1;
 }
 
+
+void make_piece_sand(Piece piece, struct Sand** sands, int* sandAmount, int* allocatedSand){
+    for(int i = 0; i < 4; i++){
+        int gx = piece.x + SHAPES[piece.shape][piece.rot][i][0];
+        int gy = piece.y + SHAPES[piece.shape][piece.rot][i][1];
+        if(gy < 0) continue ; // fuera de la grilla, esot es perder??????? 
+
+        if(*sandAmount >= *allocatedSand){
+            *allocatedSand += MEMORY_BLOCK;
+            *sands = realloc(*sands, sizeof(struct Sand) * (*allocatedSand));
+        }
+
+        (*sands)[*sandAmount].x = gx;
+        (*sands)[*sandAmount].y = gy;
+
+        (*sands)[*sandAmount].size = SAND_SIZE;
+        (*sands)[*sandAmount].color = piece.color;
+        
+        sandId[gy][gx] = *sandAmount;
+
+        (*sandAmount)++;
+    }
+}

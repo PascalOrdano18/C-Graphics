@@ -6,18 +6,6 @@
 #include "piece.h"
 
 
-static int sandId[GRID_HEIGHT][GRID_WIDTH];  // grilla de sands
-                                                       // -1 si no hay sand
-                                                       // id int si hay, con el que accedo a Sand*
-
-struct Sand{
-    int x;
-    int y;
-    int size;   // lado del cuadrado -> lo uso como pixel size = 1
-    Uint32 color;
-};
-
-
 void bfs(struct Sand* sands, int y, int x);
 
 void simulate_fall(struct Sand* sands, int sandAmount){
@@ -270,12 +258,13 @@ int main(void){
         Uint32 nowp = SDL_GetTicks();
         if(nowp - lastDrop > 80){
             lastDrop = nowp;
-            if(current_piece.active) current_piece.y += 1;
+            if(current_piece.active && piece_can_move_down(current_piece, sandId)){
+                current_piece.y += 1;
+            } else {
+                make_piece_sand(current_piece, &sands, &sandAmount, &allocatedSand);
+                current_piece = piece_spawn();
+            }
         
-        }
-        if(current_piece.y >= HEIGHT - SAND_SIZE){
-            current_piece.active = 0;
-            //piece_spawn();
         }
         if(current_piece.active){
             draw_piece(surface, current_piece);
