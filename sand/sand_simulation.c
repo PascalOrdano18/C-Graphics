@@ -246,6 +246,9 @@ int main(void){
                 if (key == SDLK_SPACE) {
                     currentColor = (currentColor == COLOR_WHITE) ? COLOR_BLUE : COLOR_WHITE;
                 }
+                if(key == SDLK_TAB){
+                    current_piece.rot = (current_piece.rot + 1) % 4;
+                }
             }
         }
 

@@ -1,13 +1,14 @@
 #include <SDL2/SDL.h>
 
-#define WDITH 500
+#define WIDTH 500
 #define HEIGHT 800
-#define SAND_SIZE 5
+#define SAND_SIZE 10
 
 #define GRID_WIDTH WIDTH / SAND_SIZE
 #define GRID_HEIGHT HEIGHT / SAND_SIZE
 
 #define COLORS 4
+#define COLOR_BLACK 0x00000000
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
 #define COLOR_RED 0xFFFF0000
