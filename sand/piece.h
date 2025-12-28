@@ -2,12 +2,12 @@
 
 #define WIDTH 500
 #define HEIGHT 800
-#define SAND_SIZE 30
+#define SAND_SIZE 20
 
 #define GRID_WIDTH WIDTH / SAND_SIZE
 #define GRID_HEIGHT HEIGHT / SAND_SIZE
 
-#define COLORS 4
+#define COLORS 3
 #define COLOR_BLACK 0x00000000
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
@@ -39,7 +39,7 @@ typedef struct{
     char active; // 0 si no esta cayendo, 1 si
 } Piece;
 
-static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_GREEN, COLOR_RED};
+static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_RED};
 
 
 // [shape][rotation][bloque][x , y]
