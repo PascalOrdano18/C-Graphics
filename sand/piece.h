@@ -1,12 +1,22 @@
 #include <SDL2/SDL.h>
 
-#define SAND_LEN 5
+#define WDITH 500
+#define HEIGHT 800
+#define SAND_SIZE 5
+
+#define GRID_WIDTH WIDTH / SAND_SIZE
+#define GRID_HEIGHT HEIGHT / SAND_SIZE
+
 #define COLORS 4
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
 #define COLOR_RED 0xFFFF0000
 #define COLOR_GREEN 0xFF00FF00
 #define BLOCK 20
+
+#define SPEED 1
+
+#define MEMORY_BLOCK 2000
 
 typedef struct{
     int x;
@@ -18,6 +28,70 @@ typedef struct{
 } Piece;
 
 static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_GREEN, COLOR_RED};
+
+
+// [shape][rotation][bloque][x , y]
+
+static const int SHAPES[7][4][4][2] = {
+
+    // ===== I =====
+    {
+        {{0,0},{1,0},{2,0},{3,0}},
+        {{1,-1},{1,0},{1,1},{1,2}},
+        {{0,1},{1,1},{2,1},{3,1}},
+        {{2,-1},{2,0},{2,1},{2,2}}
+    },
+
+    // ===== O =====
+    {
+        {{0,0},{1,0},{0,1},{1,1}},
+        {{0,0},{1,0},{0,1},{1,1}},
+        {{0,0},{1,0},{0,1},{1,1}},
+        {{0,0},{1,0},{0,1},{1,1}}
+    },
+
+    // ===== T =====
+    {
+        {{1,0},{0,1},{1,1},{2,1}},
+        {{1,0},{1,1},{2,1},{1,2}},
+        {{0,1},{1,1},{2,1},{1,2}},
+        {{1,0},{0,1},{1,1},{1,2}}
+    },
+
+    // ===== L =====
+    {
+        {{0,0},{0,1},{1,1},{2,1}},
+        {{1,0},{2,0},{1,1},{1,2}},
+        {{0,1},{1,1},{2,1},{2,2}},
+        {{1,0},{1,1},{0,2},{1,2}}
+    },
+
+    // ===== J =====
+    {
+        {{2,0},{0,1},{1,1},{2,1}},
+        {{1,0},{1,1},{1,2},{2,2}},
+        {{0,1},{1,1},{2,1},{0,2}},
+        {{0,0},{1,0},{1,1},{1,2}}
+    },
+
+    // ===== S =====
+    {
+        {{1,0},{2,0},{0,1},{1,1}},
+        {{1,0},{1,1},{2,1},{2,2}},
+        {{1,1},{2,1},{0,2},{1,2}},
+        {{0,0},{0,1},{1,1},{1,2}}
+    },
+
+    // ===== Z =====
+    {
+        {{0,0},{1,0},{1,1},{2,1}},
+        {{2,0},{1,1},{2,1},{1,2}},
+        {{0,1},{1,1},{1,2},{2,2}},
+        {{1,0},{0,1},{1,1},{0,2}}
+    }
+};
+
+
 
 Piece piece_spawn(int grid_width);
 void draw_piece(SDL_Surface* surface, Piece piece);

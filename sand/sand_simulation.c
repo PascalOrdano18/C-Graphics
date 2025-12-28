@@ -5,22 +5,6 @@
 
 #include "piece.h"
 
-#define WIDTH 500
-#define HEIGHT 800
-
-#define SAND_SIZE 5
-
-#define GRID_WIDTH WIDTH / SAND_SIZE
-#define GRID_HEIGHT HEIGHT / SAND_SIZE
-
-#define COLOR_WHITE 0xFFFFFFFF
-#define COLOR_BLUE 0xFF0000FF
-#define COLOR_RED 0xFFFF0000
-#define COLOR_BLACK 0x00000000
-#define SPEED 1
-
-#define MEMORY_BLOCK 200
-
 
 static int sandId[GRID_HEIGHT][GRID_WIDTH];  // grilla de sands
                                                        // -1 si no hay sand
@@ -227,7 +211,6 @@ int main(void){
         Uint32 dt = now - last;
         last = now;
 
-        // por seguridad si hiciste alt-tab o se colgó un frame:
         if (dt > 250) dt = 250;
 
         acc += dt;
@@ -286,13 +269,14 @@ int main(void){
             lastDrop = nowp;
             if(current_piece.active) current_piece.y += 1;
         
-
+        }
         if(current_piece.active){
             draw_piece(surface, current_piece);
         }
 
         SDL_UpdateWindowSurface(window);
     }
+
 
     free(sands);
 

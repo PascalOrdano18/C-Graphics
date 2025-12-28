@@ -65,6 +65,8 @@ int main(void){
     int vy = 0;
     int gravity = 1;
     int jumpSpeed = -12;
+    
+    int movement = 1;
 
     SDL_Rect piso = { 0, dinosaurio.y + dinosaurio.tamano, WIDTH, HEIGHT - (dinosaurio.y + dinosaurio.tamano) };
     SDL_FillRect(surface, &piso, COLOR_GRAY);
