@@ -237,6 +237,15 @@ int main(void){
                 if(key == SDLK_TAB){
                     current_piece.rot = (current_piece.rot + 1) % 4;
                 }
+                if(key == SDLK_RIGHT){
+                    current_piece.x += 1;
+                }
+                if(key == SDLK_LEFT){
+                    current_piece.x -= 1;
+                }
+                if(key == SDLK_DOWN){
+                    current_piece.y += 1;
+                }
             }
         }
 

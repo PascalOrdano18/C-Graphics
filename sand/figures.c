@@ -4,7 +4,7 @@
 #include "piece.h"
 
 Piece piece_spawn(){
-    int shape = rand() % 6;     
+    int shape = rand() % 7;     
     Uint32 color = colors[rand() % COLORS];
    
     Piece piece;

@@ -2,7 +2,7 @@
 
 #define WIDTH 500
 #define HEIGHT 800
-#define SAND_SIZE 10
+#define SAND_SIZE 30
 
 #define GRID_WIDTH WIDTH / SAND_SIZE
 #define GRID_HEIGHT HEIGHT / SAND_SIZE
