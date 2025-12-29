@@ -7,12 +7,14 @@
 #define GRID_WIDTH WIDTH / SAND_SIZE
 #define GRID_HEIGHT HEIGHT / SAND_SIZE
 
-#define COLORS 3
+#define COLORS 6
 #define COLOR_BLACK 0x00000000
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_BLUE 0xFF0000FF
 #define COLOR_RED 0xFFFF0000
 #define COLOR_GREEN 0xFF00FF00
+#define COLOR_NOSE 0xFF0F0FFF
+#define COLOR_NOSE2 0xFFFF00FF
 #define BLOCK 20
 
 #define SPEED 1
@@ -39,7 +41,7 @@ typedef struct{
     char active; // 0 si no esta cayendo, 1 si
 } Piece;
 
-static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_RED};
+static const Uint32 colors[COLORS] = {COLOR_WHITE, COLOR_BLUE, COLOR_RED, COLOR_GREEN, COLOR_NOSE, COLOR_NOSE};
 
 
 // [shape][rotation][bloque][x , y]
@@ -104,8 +106,9 @@ static const int SHAPES[7][4][4][2] = {
 };
 
 
-
 Piece piece_spawn();
 void draw_piece(SDL_Surface* surface, Piece piece);
 int piece_can_move_down(Piece piece, int sandId[GRID_HEIGHT][GRID_WIDTH]);
 void make_piece_sand(Piece piece, struct Sand** sands, int* sandAmount, int* allocatedSand);
+
+
