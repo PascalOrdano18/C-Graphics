@@ -80,6 +80,8 @@ int main(int argc, char* argv[]){
 
    int running = 1;
    SDL_Event event;
+
+   SDL_PumpEvents();
    const Uint8* keys = SDL_GetKeyboardState(NULL);
    double movement_speed = 1.0;
    while(running){
@@ -88,27 +90,29 @@ int main(int argc, char* argv[]){
                running = 0;
            }
            if(event.type == SDL_KEYDOWN){
-               if(keys[SDLK_ESCAPE]) running = 0;
-
-                if(keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]){
-                    //movement_speed = 10.0;
-                }
-
-                if(keys[SDL_SCANCODE_LEFT])  cx -= movement_speed;
-                if(keys[SDL_SCANCODE_RIGHT]) cx += movement_speed;
-                if(keys[SDL_SCANCODE_UP])    cy += movement_speed;
-                if(keys[SDL_SCANCODE_DOWN])  cy -= movement_speed;
-               switch(event.key.keysym.sym){
+                switch(event.key.keysym.sym){
 
 
-                // zoom
-                case SDLK_EQUALS: // '+' usually shift+'='
-                case SDLK_PLUS:   zoom *= 1.1; break;
-                case SDLK_MINUS:  zoom /= 1.1; break;
+                    // zoom
+                    case SDLK_EQUALS: // '+' usually shift+'='
+                    case SDLK_PLUS:   zoom *= 1.1; break;
+                    case SDLK_MINUS:  zoom /= 1.1; break;
 
-               }
-           }
+                   }
+             }
        }
+        if(keys[SDL_SCANCODE_ESCAPE]) running = 0;
+
+            if(keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]){
+                //movement_speed = 10.0;
+            }
+            double step = movement_speed / zoom;
+
+            if(keys[SDL_SCANCODE_LEFT])  cx -= step;
+            if(keys[SDL_SCANCODE_RIGHT]) cx += step;
+            if(keys[SDL_SCANCODE_UP])    cy += step;
+            if(keys[SDL_SCANCODE_DOWN])  cy -= step;
+               
 
        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
        draw_axis(surface, cx, cy, zoom);
