@@ -8,14 +8,15 @@
 
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_GRAY 0x88888888
+#define COLOR_BLUE 0xFF0000FF
 #define COLOR_BLACK 0x00000000
 
 static inline int sx(double x, double cx, double zoom){
     return (int) llround((x - cx) * zoom + WIDTH / 2.0);
 }
 
-static inline int sy(double x, double cx, double zoom){
-    return (int) llround((x - cx) * zoom + HEIGHT / 2.0);
+static inline int sy(double y, double cy, double zoom){
+    return (int) llround(HEIGHT / 2.0 - (y - cy) * zoom);
 }
 
 static inline int in_bounds(int x, int y){
@@ -41,23 +42,32 @@ void draw_axis(SDL_Surface* surface, double cx, double cy, double zoom){
     }
 }
 
-void draw_function(SDL_Surface* surface, double cx, double cy, double zoom){
+// recibe un puntero a funcion
+// tipo sin(x), cos(x), x*x 
+// entonces => double f(double x)
+// ==> double (*f) (double)
+void draw_function(SDL_Surface* surface, Uint32 color, double cx, double cy, double zoom, double (*f)(double)){
    for(int px = 0; px < WIDTH; px++){
        double x = cx + (px - WIDTH / 2.0) / zoom;
-       double y = sin(x);
+       double y = f(x);
 
        int py = sy(y, cy, zoom);
        if(py >= 0 && py < HEIGHT){
             SDL_Rect point = (SDL_Rect) { px, py, 1, 1 };
-            SDL_FillRect(surface, &point, COLOR_WHITE);
+            SDL_FillRect(surface, &point, color);
        }
    } 
 }
 
+double my_f(double f);
+
+double my_f(double x){
+    return x * x;
+}
 int main(int argc, char* argv[]){
     // if(argc < 2) return 0; // necesitamos que nos pasen datos de la funcion
 
-    double zoom = WIDTH / 200.0;
+    double zoom = 1;
     double cx = 0;
     double cy = 0;
 
@@ -70,31 +80,40 @@ int main(int argc, char* argv[]){
 
    int running = 1;
    SDL_Event event;
+   const Uint8* keys = SDL_GetKeyboardState(NULL);
+   double movement_speed = 1.0;
    while(running){
        while(SDL_PollEvent(&event)){
            if(event.type == SDL_QUIT){
                running = 0;
            }
            if(event.type == SDL_KEYDOWN){
+               if(keys[SDLK_ESCAPE]) running = 0;
+
+                if(keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]){
+                    //movement_speed = 10.0;
+                }
+
+                if(keys[SDL_SCANCODE_LEFT])  cx -= movement_speed;
+                if(keys[SDL_SCANCODE_RIGHT]) cx += movement_speed;
+                if(keys[SDL_SCANCODE_UP])    cy += movement_speed;
+                if(keys[SDL_SCANCODE_DOWN])  cy -= movement_speed;
                switch(event.key.keysym.sym){
-                case SDLK_ESCAPE: running = 0; break;
+
 
                 // zoom
                 case SDLK_EQUALS: // '+' usually shift+'='
                 case SDLK_PLUS:   zoom *= 1.1; break;
                 case SDLK_MINUS:  zoom /= 1.1; break;
 
-                case SDLK_LEFT:  cx -= 10.0 / zoom * 50; break;  // or simpler: cx -= 5;
-                case SDLK_RIGHT: cx += 10.0 / zoom * 50; break;
-                case SDLK_UP:    cy += 10.0 / zoom * 50; break;
-                case SDLK_DOWN:  cy -= 10.0 / zoom * 50; break;
-            }
                }
+           }
        }
 
        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
        draw_axis(surface, cx, cy, zoom);
-       draw_function(surface, cx, cy, zoom);
+       draw_function(surface, COLOR_WHITE, cx, cy, zoom, my_f);
+       draw_function(surface, COLOR_BLUE, cx, cy, zoom, cos);
 
        SDL_UpdateWindowSurface(window);
    }
