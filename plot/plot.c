@@ -9,6 +9,8 @@
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_GRAY 0x88888888
 #define COLOR_BLUE 0xFF0000FF
+#define COLOR_RED 0xFFFF0000
+#define COLOR_GREEN 0xFF00FF00
 #define COLOR_BLACK 0x00000000
 
 static inline int sx(double x, double cx, double zoom){
@@ -59,18 +61,15 @@ void draw_function(SDL_Surface* surface, Uint32 color, double cx, double cy, dou
    } 
 }
 
-double my_f(double f);
 
-double my_f(double x){
+double cuadratica(double x){
     return x * x;
 }
-int main(int argc, char* argv[]){
-    // if(argc < 2) return 0; // necesitamos que nos pasen datos de la funcion
 
+int main(int argc, char* argv[]){
     double zoom = 1;
     double cx = 0;
     double cy = 0;
-
 
    SDL_Init(SDL_INIT_VIDEO);
    SDL_Window* window = SDL_CreateWindow("Function Plotter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
@@ -81,8 +80,6 @@ int main(int argc, char* argv[]){
    int running = 1;
    SDL_Event event;
 
-   SDL_PumpEvents();
-   const Uint8* keys = SDL_GetKeyboardState(NULL);
    double movement_speed = 1.0;
    while(running){
        while(SDL_PollEvent(&event)){
@@ -91,20 +88,20 @@ int main(int argc, char* argv[]){
            }
            if(event.type == SDL_KEYDOWN){
                 switch(event.key.keysym.sym){
-
-
                     // zoom
-                    case SDLK_EQUALS: // '+' usually shift+'='
+                    case SDLK_EQUALS:
                     case SDLK_PLUS:   zoom *= 1.1; break;
                     case SDLK_MINUS:  zoom /= 1.1; break;
-
                    }
              }
        }
-        if(keys[SDL_SCANCODE_ESCAPE]) running = 0;
+       SDL_PumpEvents();
+       const Uint8* keys = SDL_GetKeyboardState(NULL);
 
+        if(keys[SDL_SCANCODE_ESCAPE]) running = 0;
+            movement_speed = 1.0;
             if(keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]){
-                //movement_speed = 10.0;
+                movement_speed = 2.0;
             }
             double step = movement_speed / zoom;
 
@@ -116,8 +113,10 @@ int main(int argc, char* argv[]){
 
        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
        draw_axis(surface, cx, cy, zoom);
-       draw_function(surface, COLOR_WHITE, cx, cy, zoom, my_f);
+       draw_function(surface, COLOR_GREEN, cx, cy, zoom, cuadratica);
        draw_function(surface, COLOR_BLUE, cx, cy, zoom, cos);
+       draw_function(surface, COLOR_WHITE, cx, cy, zoom, sin);
+       draw_function(surface, COLOR_RED, cx, cy, zoom, tan);
 
        SDL_UpdateWindowSurface(window);
    }
