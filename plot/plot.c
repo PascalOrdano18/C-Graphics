@@ -68,8 +68,8 @@ double cuadratica(double x){
 
 int main(int argc, char* argv[]){
     double zoom = 1;
-    double cx = 0;
-    double cy = 0;
+    double cx = 0.0;
+    double cy = 0.0;
 
    SDL_Init(SDL_INIT_VIDEO);
    SDL_Window* window = SDL_CreateWindow("Function Plotter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
@@ -109,7 +109,6 @@ int main(int argc, char* argv[]){
             if(keys[SDL_SCANCODE_RIGHT]) cx += step;
             if(keys[SDL_SCANCODE_UP])    cy += step;
             if(keys[SDL_SCANCODE_DOWN])  cy -= step;
-               
 
        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
        draw_axis(surface, cx, cy, zoom);
@@ -124,3 +123,4 @@ int main(int argc, char* argv[]){
    SDL_Quit();
    return 0;
 }
+
