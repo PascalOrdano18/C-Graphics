@@ -1,47 +1,154 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include <time.h>
 
 #define WIDTH 900
 #define HEIGHT 600
-#define TAMANO 20
-#define PISO 450 + TAMANO
+#define GROUND_Y 470
+#define DINO_WIDTH 40
+#define DINO_HEIGHT 44
 
-#define COLOR_WHITE 0xFFFFFFFF
-#define COLOR_GRAY 0xFF888888
-#define COLOR_BLACK 0x00000000
-#define COLOR_RED 0xFFFF0000
+// Color palette (desert theme)
+#define COLOR_SKY       0xFF87CEEB
+#define COLOR_GROUND    0xFFDEB887
+#define COLOR_DINO      0xFF2F4F4F
+#define COLOR_CACTUS    0xFF228B22
+#define COLOR_PTERO     0xFF8B4513
+#define COLOR_CLOUD     0xFFFFFFFF
+#define COLOR_SCORE     0xFF333333
+#define COLOR_GAMEOVER  0xFFCC0000
+#define COLOR_WHITE     0xFFFFFFFF
 
 #define MAX_OBSTACLES 10
-#define OBSTACLE_WIDTH 25
+#define MAX_CLOUDS 5
+
+typedef enum { OBS_CACTUS_SMALL, OBS_CACTUS_TALL, OBS_PTERO } ObstacleType;
+typedef enum { STATE_PLAYING, STATE_GAMEOVER } GameState;
 
 typedef struct {
-    int x;
-    int y;
-    int tamano;
-    Uint32 color;
+    float x, y;
+    int width, height;
+    int ducking;
+    int leg_frame;      // Animation frame for legs
 } Dino;
 
 typedef struct {
-    float x;
-    float y;
+    float x, y;
     float vx;
-    int width;
-    int height;
-    Uint32 color;
+    int width, height;
+    ObstacleType type;
     int active;
 } Obstacle;
 
-Obstacle obstacles[MAX_OBSTACLES];
-int spawn_timer = 0;
-int spawn_interval = 80;
+typedef struct {
+    float x, y;
+    float vx;
+    int width, height;
+} Cloud;
 
-void draw_dino(SDL_Surface* surface, Dino dinosaurio){
-    SDL_Rect dino_rect = { dinosaurio.x, dinosaurio.y, dinosaurio.tamano, dinosaurio.tamano }; 
-    SDL_FillRect(surface, &dino_rect, dinosaurio.color); 
+// Global game state
+Obstacle obstacles[MAX_OBSTACLES];
+Cloud clouds[MAX_CLOUDS];
+int score = 0;
+int high_score = 0;
+float game_speed = 1.0f;
+GameState game_state = STATE_PLAYING;
+
+// Pixel font for score (5x7 digits)
+const unsigned char DIGITS[10][7] = {
+    {0x0E,0x11,0x13,0x15,0x19,0x11,0x0E}, // 0
+    {0x04,0x0C,0x04,0x04,0x04,0x04,0x0E}, // 1
+    {0x0E,0x11,0x01,0x0E,0x10,0x10,0x1F}, // 2
+    {0x0E,0x11,0x01,0x0E,0x01,0x11,0x0E}, // 3
+    {0x02,0x06,0x0A,0x12,0x1F,0x02,0x02}, // 4
+    {0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E}, // 5
+    {0x0E,0x10,0x10,0x1E,0x11,0x11,0x0E}, // 6
+    {0x1F,0x01,0x02,0x04,0x08,0x08,0x08}, // 7
+    {0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E}, // 8
+    {0x0E,0x11,0x11,0x0F,0x01,0x01,0x0E}, // 9
+};
+
+void draw_digit(SDL_Surface* surface, int digit, int x, int y, int scale, Uint32 color) {
+    if (digit < 0 || digit > 9) return;
+    for (int row = 0; row < 7; row++) {
+        for (int col = 0; col < 5; col++) {
+            if (DIGITS[digit][row] & (1 << (4 - col))) {
+                SDL_Rect pixel = { x + col * scale, y + row * scale, scale, scale };
+                SDL_FillRect(surface, &pixel, color);
+            }
+        }
+    }
 }
 
+void draw_number(SDL_Surface* surface, int number, int x, int y, int scale, Uint32 color) {
+    char buf[16];
+    sprintf(buf, "%d", number);
+    int len = strlen(buf);
+    for (int i = 0; i < len; i++) {
+        draw_digit(surface, buf[i] - '0', x + i * (6 * scale), y, scale, color);
+    }
+}
+
+void draw_dino(SDL_Surface* surface, Dino* dino) {
+    int x = (int)dino->x;
+    int y = (int)dino->y;
+
+    if (dino->ducking) {
+        // Ducking dino (wider, shorter)
+        // Body
+        SDL_Rect body = { x, y + 24, 50, 20 };
+        SDL_FillRect(surface, &body, COLOR_DINO);
+        // Head
+        SDL_Rect head = { x + 35, y + 14, 20, 16 };
+        SDL_FillRect(surface, &head, COLOR_DINO);
+        // Eye
+        SDL_Rect eye = { x + 48, y + 17, 4, 4 };
+        SDL_FillRect(surface, &eye, COLOR_SKY);
+        // Legs (animated)
+        if (dino->leg_frame < 5) {
+            SDL_Rect leg1 = { x + 10, y + 44, 6, 10 };
+            SDL_Rect leg2 = { x + 30, y + 44, 6, 10 };
+            SDL_FillRect(surface, &leg1, COLOR_DINO);
+            SDL_FillRect(surface, &leg2, COLOR_DINO);
+        } else {
+            SDL_Rect leg1 = { x + 5, y + 44, 6, 10 };
+            SDL_Rect leg2 = { x + 25, y + 44, 6, 10 };
+            SDL_FillRect(surface, &leg1, COLOR_DINO);
+            SDL_FillRect(surface, &leg2, COLOR_DINO);
+        }
+    } else {
+        // Standing dino
+        // Body
+        SDL_Rect body = { x + 5, y + 14, 30, 30 };
+        SDL_FillRect(surface, &body, COLOR_DINO);
+        // Head
+        SDL_Rect head = { x + 15, y, 25, 20 };
+        SDL_FillRect(surface, &head, COLOR_DINO);
+        // Eye
+        SDL_Rect eye = { x + 32, y + 4, 4, 4 };
+        SDL_FillRect(surface, &eye, COLOR_SKY);
+        // Tail
+        SDL_Rect tail = { x, y + 20, 10, 8 };
+        SDL_FillRect(surface, &tail, COLOR_DINO);
+        // Arms
+        SDL_Rect arm = { x + 30, y + 24, 8, 4 };
+        SDL_FillRect(surface, &arm, COLOR_DINO);
+        // Legs (animated)
+        if (dino->leg_frame < 5) {
+            SDL_Rect leg1 = { x + 10, y + 44, 8, 16 };
+            SDL_Rect leg2 = { x + 24, y + 44, 8, 12 };
+            SDL_FillRect(surface, &leg1, COLOR_DINO);
+            SDL_FillRect(surface, &leg2, COLOR_DINO);
+        } else {
+            SDL_Rect leg1 = { x + 10, y + 44, 8, 12 };
+            SDL_Rect leg2 = { x + 24, y + 44, 8, 16 };
+            SDL_FillRect(surface, &leg1, COLOR_DINO);
+            SDL_FillRect(surface, &leg2, COLOR_DINO);
+        }
+    }
+}
 
 void init_obstacles(void) {
     for (int i = 0; i < MAX_OBSTACLES; i++) {
@@ -49,16 +156,44 @@ void init_obstacles(void) {
     }
 }
 
+void init_clouds(void) {
+    for (int i = 0; i < MAX_CLOUDS; i++) {
+        clouds[i].x = rand() % WIDTH;
+        clouds[i].y = 50 + rand() % 150;
+        clouds[i].vx = -0.5f - (rand() % 100) / 100.0f;
+        clouds[i].width = 60 + rand() % 40;
+        clouds[i].height = 20 + rand() % 15;
+    }
+}
+
 void spawn_obstacle(void) {
     for (int i = 0; i < MAX_OBSTACLES; i++) {
         if (!obstacles[i].active) {
-            int height = 20 + rand() % 40;
-            obstacles[i].x = WIDTH;
-            obstacles[i].y = PISO - height;
-            obstacles[i].vx = -4.0f - (rand() % 3);
-            obstacles[i].width = OBSTACLE_WIDTH;
-            obstacles[i].height = height;
-            obstacles[i].color = COLOR_RED;
+            int type_roll = rand() % 100;
+
+            if (type_roll < 40) {
+                // Small cactus
+                obstacles[i].type = OBS_CACTUS_SMALL;
+                obstacles[i].width = 20;
+                obstacles[i].height = 35;
+                obstacles[i].y = GROUND_Y - obstacles[i].height;
+            } else if (type_roll < 75) {
+                // Tall cactus
+                obstacles[i].type = OBS_CACTUS_TALL;
+                obstacles[i].width = 25;
+                obstacles[i].height = 50;
+                obstacles[i].y = GROUND_Y - obstacles[i].height;
+            } else {
+                // Pterodactyl (flying)
+                obstacles[i].type = OBS_PTERO;
+                obstacles[i].width = 40;
+                obstacles[i].height = 30;
+                // Randomly high or low
+                obstacles[i].y = (rand() % 2) ? GROUND_Y - 80 : GROUND_Y - 40;
+            }
+
+            obstacles[i].x = WIDTH + rand() % 100;
+            obstacles[i].vx = -5.0f * game_speed;
             obstacles[i].active = 1;
             break;
         }
@@ -71,32 +206,129 @@ void update_obstacles(void) {
             obstacles[i].x += obstacles[i].vx;
             if (obstacles[i].x + obstacles[i].width < 0) {
                 obstacles[i].active = 0;
+                score += 10;
             }
         }
     }
 }
 
-void draw_obstacles(SDL_Surface* surface) {
-    for (int i = 0; i < MAX_OBSTACLES; i++) {
-        if (obstacles[i].active) {
-            SDL_Rect obs = {
-                (int)obstacles[i].x,
-                (int)obstacles[i].y,
-                obstacles[i].width,
-                obstacles[i].height
-            };
-            SDL_FillRect(surface, &obs, obstacles[i].color);
+void update_clouds(void) {
+    for (int i = 0; i < MAX_CLOUDS; i++) {
+        clouds[i].x += clouds[i].vx;
+        if (clouds[i].x + clouds[i].width < 0) {
+            clouds[i].x = WIDTH + rand() % 100;
+            clouds[i].y = 50 + rand() % 150;
+            clouds[i].width = 60 + rand() % 40;
+            clouds[i].height = 20 + rand() % 15;
         }
     }
+}
+
+void draw_cloud(SDL_Surface* surface, Cloud* cloud) {
+    int x = (int)cloud->x;
+    int y = (int)cloud->y;
+    int w = cloud->width;
+    int h = cloud->height;
+
+    // Draw fluffy cloud shape
+    SDL_Rect r1 = { x + w/4, y, w/2, h };
+    SDL_Rect r2 = { x, y + h/3, w, h/2 };
+    SDL_Rect r3 = { x + w/6, y + h/4, w*2/3, h/2 };
+    SDL_FillRect(surface, &r1, COLOR_CLOUD);
+    SDL_FillRect(surface, &r2, COLOR_CLOUD);
+    SDL_FillRect(surface, &r3, COLOR_CLOUD);
+}
+
+void draw_cactus(SDL_Surface* surface, Obstacle* obs) {
+    int x = (int)obs->x;
+    int y = (int)obs->y;
+
+    // Main trunk
+    SDL_Rect trunk = { x + obs->width/3, y, obs->width/3, obs->height };
+    SDL_FillRect(surface, &trunk, COLOR_CACTUS);
+
+    if (obs->type == OBS_CACTUS_TALL) {
+        // Left arm
+        SDL_Rect arm_l = { x, y + obs->height/3, obs->width/3, obs->height/4 };
+        SDL_Rect arm_l_up = { x, y + obs->height/6, obs->width/4, obs->height/4 };
+        SDL_FillRect(surface, &arm_l, COLOR_CACTUS);
+        SDL_FillRect(surface, &arm_l_up, COLOR_CACTUS);
+
+        // Right arm
+        SDL_Rect arm_r = { x + obs->width*2/3, y + obs->height/2, obs->width/3, obs->height/4 };
+        SDL_Rect arm_r_up = { x + obs->width*3/4, y + obs->height/3, obs->width/4, obs->height/4 };
+        SDL_FillRect(surface, &arm_r, COLOR_CACTUS);
+        SDL_FillRect(surface, &arm_r_up, COLOR_CACTUS);
+    }
+}
+
+void draw_pterodactyl(SDL_Surface* surface, Obstacle* obs, int frame) {
+    int x = (int)obs->x;
+    int y = (int)obs->y;
+
+    // Body
+    SDL_Rect body = { x + 10, y + 12, 20, 10 };
+    SDL_FillRect(surface, &body, COLOR_PTERO);
+
+    // Head
+    SDL_Rect head = { x + 28, y + 10, 12, 8 };
+    SDL_FillRect(surface, &head, COLOR_PTERO);
+
+    // Beak
+    SDL_Rect beak = { x + 36, y + 14, 8, 3 };
+    SDL_FillRect(surface, &beak, COLOR_PTERO);
+
+    // Wings (animated)
+    if (frame < 5) {
+        SDL_Rect wing = { x, y, 30, 8 };
+        SDL_FillRect(surface, &wing, COLOR_PTERO);
+    } else {
+        SDL_Rect wing = { x, y + 20, 30, 8 };
+        SDL_FillRect(surface, &wing, COLOR_PTERO);
+    }
+}
+
+void draw_obstacles(SDL_Surface* surface, int frame) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        if (obstacles[i].active) {
+            if (obstacles[i].type == OBS_PTERO) {
+                draw_pterodactyl(surface, &obstacles[i], frame);
+            } else {
+                draw_cactus(surface, &obstacles[i]);
+            }
+        }
+    }
+}
+
+void draw_clouds(SDL_Surface* surface) {
+    for (int i = 0; i < MAX_CLOUDS; i++) {
+        draw_cloud(surface, &clouds[i]);
+    }
+}
+
+void draw_ground(SDL_Surface* surface) {
+    // Main ground
+    SDL_Rect ground = { 0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y };
+    SDL_FillRect(surface, &ground, COLOR_GROUND);
+
+    // Ground line
+    SDL_Rect line = { 0, GROUND_Y, WIDTH, 2 };
+    SDL_FillRect(surface, &line, COLOR_SCORE);
 }
 
 int check_collision(Dino* dino, Obstacle* obs) {
     if (!obs->active) return 0;
 
-    return (dino->x < obs->x + obs->width &&
-            dino->x + dino->tamano > obs->x &&
-            dino->y < obs->y + obs->height &&
-            dino->y + dino->tamano > obs->y);
+    // Dino hitbox (smaller than visual for fairness)
+    int dx = (int)dino->x + 8;
+    int dy = (int)dino->y + 5;
+    int dw = dino->ducking ? 42 : dino->width - 16;
+    int dh = dino->ducking ? 35 : dino->height - 10;
+
+    return (dx < obs->x + obs->width &&
+            dx + dw > obs->x &&
+            dy < obs->y + obs->height &&
+            dy + dh > obs->y);
 }
 
 int check_all_collisions(Dino* dino) {
@@ -108,91 +340,177 @@ int check_all_collisions(Dino* dino) {
     return 0;
 }
 
+void reset_game(Dino* dino) {
+    dino->x = 80;
+    dino->y = GROUND_Y - DINO_HEIGHT;
+    dino->ducking = 0;
 
-int main(void){
+    init_obstacles();
+
+    if (score > high_score) {
+        high_score = score;
+    }
+    score = 0;
+    game_speed = 1.0f;
+    game_state = STATE_PLAYING;
+}
+
+void draw_game_over(SDL_Surface* surface) {
+    // Semi-transparent overlay effect (darken center)
+    SDL_Rect overlay = { WIDTH/2 - 150, HEIGHT/2 - 60, 300, 120 };
+    SDL_FillRect(surface, &overlay, 0xFF000000);
+
+    // "GAME OVER" text approximation
+    draw_number(surface, 0, WIDTH/2 - 80, HEIGHT/2 - 40, 4, COLOR_GAMEOVER);
+
+    // Score display
+    draw_number(surface, score, WIDTH/2 - 50, HEIGHT/2 + 10, 3, COLOR_WHITE);
+}
+
+int main(void) {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Dino", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
-
+    SDL_Window* window = SDL_CreateWindow("Dino Run!",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     srand(time(NULL));
     init_obstacles();
+    init_clouds();
 
-    const Uint32 SIM_MS = 20;
-
+    const Uint32 SIM_MS = 16;
     Uint32 last = SDL_GetTicks();
     Uint32 acc = 0;
 
-    Dino dinosaurio = {
-        100,
-        450,
-        TAMANO,
-        COLOR_WHITE
+    Dino dino = {
+        .x = 80,
+        .y = GROUND_Y - DINO_HEIGHT,
+        .width = DINO_WIDTH,
+        .height = DINO_HEIGHT,
+        .ducking = 0,
+        .leg_frame = 0
     };
 
-    int vy = 0;
-    int gravity = 1;
-    int jumpSpeed = -12;
+    float vy = 0;
+    float gravity = 0.8f;
+    float jumpSpeed = -14.0f;
 
-    SDL_Rect piso = { 0, dinosaurio.y + dinosaurio.tamano, WIDTH, HEIGHT - (dinosaurio.y + dinosaurio.tamano) };
+    int spawn_timer = 0;
+    int spawn_interval = 60;
+    int anim_frame = 0;
 
     int running = 1;
     SDL_Event event;
-   
-    while(running){
+    const Uint8* keystate = SDL_GetKeyboardState(NULL);
+
+    while (running) {
         Uint32 now = SDL_GetTicks();
         Uint32 dt = now - last;
         last = now;
-        
-        if(dt > 250) dt = 250;
+
+        if (dt > 250) dt = 250;
         acc += dt;
 
-        while(SDL_PollEvent(&event)){
-            if(event.type == SDL_QUIT){
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
                 running = 0;
             }
-            if(event.type == SDL_KEYDOWN){
+            if (event.type == SDL_KEYDOWN) {
                 SDL_Keycode key = event.key.keysym.sym;
-                if(key == SDLK_SPACE){
-                    if(dinosaurio.y == 450) vy = jumpSpeed;
+
+                if (game_state == STATE_GAMEOVER) {
+                    if (key == SDLK_SPACE || key == SDLK_r) {
+                        reset_game(&dino);
+                        vy = 0;
+                        spawn_timer = 0;
+                        spawn_interval = 60;
+                    }
+                } else {
+                    if ((key == SDLK_SPACE || key == SDLK_UP || key == SDLK_w) &&
+                        dino.y >= GROUND_Y - DINO_HEIGHT - 1) {
+                        vy = jumpSpeed;
+                    }
                 }
             }
         }
 
-        while(acc >= SIM_MS){
-            // Dino physics
-            vy += gravity;
-            dinosaurio.y += vy;
-            if(dinosaurio.y >= 450){
-                dinosaurio.y = 450;
-                vy = 0;
+        while (acc >= SIM_MS) {
+            if (game_state == STATE_PLAYING) {
+                // Check duck input (hold DOWN)
+                dino.ducking = (keystate[SDL_SCANCODE_DOWN] || keystate[SDL_SCANCODE_S]);
+
+                // Fast fall when ducking in air
+                if (dino.ducking && dino.y < GROUND_Y - DINO_HEIGHT) {
+                    vy += gravity * 2;
+                }
+
+                // Dino physics
+                vy += gravity;
+                dino.y += vy;
+
+                int ground_level = GROUND_Y - (dino.ducking ? 34 : DINO_HEIGHT);
+                if (dino.y >= ground_level) {
+                    dino.y = ground_level;
+                    vy = 0;
+                }
+
+                // Animation
+                anim_frame = (anim_frame + 1) % 10;
+                dino.leg_frame = anim_frame;
+
+                // Obstacle spawning
+                spawn_timer++;
+                if (spawn_timer >= spawn_interval) {
+                    spawn_obstacle();
+                    spawn_timer = 0;
+                    // Random interval for variety
+                    spawn_interval = 40 + rand() % 40;
+                }
+
+                // Update game speed
+                game_speed = 1.0f + score / 500.0f;
+                if (game_speed > 2.5f) game_speed = 2.5f;
+
+                // Update obstacle speeds
+                for (int i = 0; i < MAX_OBSTACLES; i++) {
+                    if (obstacles[i].active) {
+                        obstacles[i].vx = -5.0f * game_speed;
+                    }
+                }
+
+                update_obstacles();
+                update_clouds();
+
+                // Passive score increase
+                score++;
+
+                // Collision detection
+                if (check_all_collisions(&dino)) {
+                    game_state = STATE_GAMEOVER;
+                    if (score > high_score) {
+                        high_score = score;
+                    }
+                }
             }
-
-            // Obstacle spawning
-            spawn_timer++;
-            if(spawn_timer >= spawn_interval){
-                spawn_obstacle();
-                spawn_timer = 0;
-                // Gradually increase difficulty
-                if(spawn_interval > 40) spawn_interval--;
-            }
-
-            // Update obstacles
-            update_obstacles();
-
-            // Collision detection
-            if(check_all_collisions(&dinosaurio)){
-                printf("Game Over!\n");
-                running = 0;
-            }
-
-            // Render
-            SDL_FillRect(surface, NULL, COLOR_BLACK);
-            SDL_FillRect(surface, &piso, COLOR_GRAY);
-            draw_dino(surface, dinosaurio);
-            draw_obstacles(surface);
             acc -= SIM_MS;
         }
+
+        // Render
+        SDL_FillRect(surface, NULL, COLOR_SKY);
+        draw_clouds(surface);
+        draw_ground(surface);
+        draw_dino(surface, &dino);
+        draw_obstacles(surface, anim_frame);
+
+        // HUD
+        draw_number(surface, score, WIDTH - 150, 20, 3, COLOR_SCORE);
+        if (high_score > 0) {
+            draw_number(surface, high_score, WIDTH - 300, 20, 2, COLOR_SCORE);
+        }
+
+        if (game_state == STATE_GAMEOVER) {
+            draw_game_over(surface);
+        }
+
         SDL_UpdateWindowSurface(window);
     }
 
@@ -200,8 +518,3 @@ int main(void){
     SDL_Quit();
     return 0;
 }
-
-
-
-
-
