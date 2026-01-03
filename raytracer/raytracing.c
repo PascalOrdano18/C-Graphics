@@ -9,9 +9,10 @@
 #define COLOR_WHITE 0xFFFFFFFF   // es un int, 4 bytes
 #define COLOR_BLACK 0x0
 #define COLOR_BLUE 0x000000FF
-#define COLOR_YELLOW 0xFFFFFF00
+#define COLOR_YELLOW 0xFFFFFEFF
+#define COLOR_GRAY 0x88888888
 
-#define RAYS_AMOUNT 750
+#define RAYS_AMOUNT 200
 #define OBJECTS_AMOUNT 2
 
 struct Ray{
@@ -26,12 +27,24 @@ struct Circle {
     double radius;
 };
 
+typedef struct{
+    double x;
+    double y;
+    double radius;
+    double angle;
+} Cone;
 
 
+typedef struct{
+    double x;
+    double y;
+    double width;
+    double height;
+    double n;  // indice de refraccion. El del aire es 1, este va a ser un medio con n != 1 para refractar la luz
+} Medium;
 
 void FillCircle(SDL_Surface* surface, struct Circle circle, Uint32 color){
     // circle.x - circle.radius te da el vertice superior izquierdo del cuadrado que contiene al circulo
-    
     double radius_squared = pow(circle.radius, 2);
     for(double x = circle.x - circle.radius; x <= circle.x + circle.radius; x++){
         for(double y = circle.y - circle.radius; y <= circle.y + circle.radius; y++){
@@ -89,6 +102,11 @@ void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_AMOUNT], struct Circle 
     }
 }
 
+void draw_medium(SDL_Surface* surface, Medium* medium){
+    SDL_Rect med = (SDL_Rect) { medium->x, medium->y, medium->width, medium->height }; 
+    SDL_FillRect(surface, &med, COLOR_GRAY);
+}  
+
 int main(void){
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Raytracing", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
@@ -98,6 +116,10 @@ int main(void){
 
    
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
+
+
+    Medium medium = { 0, 600, WIDTH, 100, 2 };
+
     struct Circle circle = { 500, 200, 35 };
     struct Circle light2 = {600, 800, 10};
 
@@ -139,6 +161,9 @@ int main(void){
         
         FillRays(surface, rays, objects, COLOR_WHITE);
         //FillRays(surface, lightRays, objects, COLOR_YELLOW);
+        
+
+        draw_medium(surface, &medium);
 
         SDL_UpdateWindowSurface(window);
     }
