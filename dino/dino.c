@@ -11,6 +11,10 @@
 #define COLOR_WHITE 0xFFFFFFFF
 #define COLOR_GRAY 0xFF888888
 #define COLOR_BLACK 0x00000000
+#define COLOR_RED 0xFFFF0000
+
+#define MAX_OBSTACLES 10
+#define OBSTACLE_WIDTH 25
 
 typedef struct {
     int x;
@@ -20,11 +24,18 @@ typedef struct {
 } Dino;
 
 typedef struct {
-    int x;
-    int y;
+    float x;
+    float y;
+    float vx;
+    int width;
     int height;
     Uint32 color;
+    int active;
 } Obstacle;
+
+Obstacle obstacles[MAX_OBSTACLES];
+int spawn_timer = 0;
+int spawn_interval = 80;
 
 void draw_dino(SDL_Surface* surface, Dino dinosaurio){
     SDL_Rect dino_rect = { dinosaurio.x, dinosaurio.y, dinosaurio.tamano, dinosaurio.tamano }; 
@@ -32,12 +43,69 @@ void draw_dino(SDL_Surface* surface, Dino dinosaurio){
 }
 
 
-void draw_obstacles(SDL_Surface* surface){
-    int height = 10 +  rand() % 30; // altura minima 10, maxima 40
-                                  //
-    Obstacle obstacle = { 500, PISO - height, height, COLOR_GRAY };
-    SDL_Rect obs = (SDL_Rect) { obstacle.x, obstacle.y, 20, height };
-    SDL_FillRect(surface, &obs, obstacle.color);
+void init_obstacles(void) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        obstacles[i].active = 0;
+    }
+}
+
+void spawn_obstacle(void) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        if (!obstacles[i].active) {
+            int height = 20 + rand() % 40;
+            obstacles[i].x = WIDTH;
+            obstacles[i].y = PISO - height;
+            obstacles[i].vx = -4.0f - (rand() % 3);
+            obstacles[i].width = OBSTACLE_WIDTH;
+            obstacles[i].height = height;
+            obstacles[i].color = COLOR_RED;
+            obstacles[i].active = 1;
+            break;
+        }
+    }
+}
+
+void update_obstacles(void) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        if (obstacles[i].active) {
+            obstacles[i].x += obstacles[i].vx;
+            if (obstacles[i].x + obstacles[i].width < 0) {
+                obstacles[i].active = 0;
+            }
+        }
+    }
+}
+
+void draw_obstacles(SDL_Surface* surface) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        if (obstacles[i].active) {
+            SDL_Rect obs = {
+                (int)obstacles[i].x,
+                (int)obstacles[i].y,
+                obstacles[i].width,
+                obstacles[i].height
+            };
+            SDL_FillRect(surface, &obs, obstacles[i].color);
+        }
+    }
+}
+
+int check_collision(Dino* dino, Obstacle* obs) {
+    if (!obs->active) return 0;
+
+    return (dino->x < obs->x + obs->width &&
+            dino->x + dino->tamano > obs->x &&
+            dino->y < obs->y + obs->height &&
+            dino->y + dino->tamano > obs->y);
+}
+
+int check_all_collisions(Dino* dino) {
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        if (check_collision(dino, &obstacles[i])) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -48,8 +116,8 @@ int main(void){
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     srand(time(NULL));
+    init_obstacles();
 
-    const Uint32 RENDER_MS = 16;
     const Uint32 SIM_MS = 20;
 
     Uint32 last = SDL_GetTicks();
@@ -65,13 +133,8 @@ int main(void){
     int vy = 0;
     int gravity = 1;
     int jumpSpeed = -12;
-    
-    int movement = 1;
 
     SDL_Rect piso = { 0, dinosaurio.y + dinosaurio.tamano, WIDTH, HEIGHT - (dinosaurio.y + dinosaurio.tamano) };
-    SDL_FillRect(surface, &piso, COLOR_GRAY);
-
-    SDL_Rect erase_rect = { 0, 0, WIDTH, 450 };
 
     int running = 1;
     SDL_Event event;
@@ -97,13 +160,33 @@ int main(void){
         }
 
         while(acc >= SIM_MS){
+            // Dino physics
             vy += gravity;
             dinosaurio.y += vy;
             if(dinosaurio.y >= 450){
                 dinosaurio.y = 450;
                 vy = 0;
-            } 
+            }
 
+            // Obstacle spawning
+            spawn_timer++;
+            if(spawn_timer >= spawn_interval){
+                spawn_obstacle();
+                spawn_timer = 0;
+                // Gradually increase difficulty
+                if(spawn_interval > 40) spawn_interval--;
+            }
+
+            // Update obstacles
+            update_obstacles();
+
+            // Collision detection
+            if(check_all_collisions(&dinosaurio)){
+                printf("Game Over!\n");
+                running = 0;
+            }
+
+            // Render
             SDL_FillRect(surface, NULL, COLOR_BLACK);
             SDL_FillRect(surface, &piso, COLOR_GRAY);
             draw_dino(surface, dinosaurio);
