@@ -15,7 +15,6 @@
 
 static inline int sx(double x, double cx, double zoom){
     return (int) llround((x - cx) * zoom + WIDTH / 2.0);
-}
 
 static inline int sy(double y, double cy, double zoom){
     return (int) llround(HEIGHT / 2.0 - (y - cy) * zoom);

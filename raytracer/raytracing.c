@@ -12,7 +12,7 @@
 #define COLOR_YELLOW 0xFFFFFEFF
 #define COLOR_GRAY 0x88888888
 
-#define RAYS_AMOUNT 200
+#define RAYS_AMOUNT 100
 #define OBJECTS_AMOUNT 2
 
 struct Ray{
@@ -143,6 +143,11 @@ int main(void){
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {   // es el evento de cuando aprento la X
                 running = 0;
+            }
+            if(event.type == SDL_KEYDOWN){
+                if(event.key.keysym.sym == SDLK_ESCAPE){
+                    running = 0;
+                } 
             }
             if(event.type == SDL_MOUSEMOTION && event.motion.state != 0){
                 circle.x = event.motion.x;
