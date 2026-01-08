@@ -12,7 +12,7 @@
 #define COLOR_YELLOW 0xFFFFFEFF
 #define COLOR_GRAY 0x88888888
 
-#define RAYS_AMOUNT 100
+#define RAYS_AMOUNT 1500
 #define OBJECTS_AMOUNT 2
 
 struct Ray{

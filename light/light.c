@@ -26,6 +26,7 @@ typedef struct{
     double y;
     double radius;
     double angle;
+    double orientation;
 } Cone;
 
 typedef struct{
@@ -86,6 +87,7 @@ int main(void){
     SDL_Surface* surface = SDL_GetWindowSurface(window);
     SDL_Rect erase_rect = (SDL_Rect) { 0, 0, WIDTH, HEIGHT };
 
+    Cone cone = { 200, 200, 20, M_PI / 6, M_PI * 1.5 };
     Medium medium = { 0, 600, WIDTH, HEIGHT - 600, 2 };
 
     double angle = M_PI / 4;
@@ -107,9 +109,14 @@ int main(void){
                 if(event.key.keysym.sym == SDLK_DOWN){
                     angle -= 0.01;
                 }
+                if(event.key.keysym.sym == SDLK_RIGHT && medium.n > 1){
+                    medium.n -= 0.1;
+                }
+                if(event.key.keysym.sym == SDLK_LEFT && medium.n < 2.5){
+                    medium.n += 0.1; 
+                }
             }
         }
-        
         SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
         draw_medium(surface, &medium);
 
