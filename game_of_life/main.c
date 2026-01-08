@@ -6,7 +6,7 @@
 #define WIDTH 700
 #define HEIGHT 700
 
-#define CELL_LEN 2
+#define CELL_LEN 8
 #define GRID_WIDTH WIDTH / CELL_LEN
 #define GRID_HEIGHT HEIGHT / CELL_LEN
 
