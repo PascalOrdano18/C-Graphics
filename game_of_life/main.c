@@ -6,7 +6,7 @@
 #define WIDTH 700
 #define HEIGHT 700
 
-#define CELL_LEN 8
+#define CELL_LEN 10
 #define GRID_WIDTH WIDTH / CELL_LEN
 #define GRID_HEIGHT HEIGHT / CELL_LEN
 
@@ -15,13 +15,6 @@
 #define COLOR_BLUE 0xFF1111DD
 #define COLOR_RED 0xFFFF0000
 
-
-typedef struct {
-    double x;
-    double y;
-    unsigned char occupied;
-    Uint32 color;
-} Cell;
 
 void draw_grid(SDL_Surface* surface, unsigned char grid[GRID_HEIGHT][GRID_WIDTH]){
     for(int y = 0; y < GRID_HEIGHT; y++){
@@ -69,7 +62,7 @@ void game_of_life(SDL_Surface * surface, unsigned char grid[GRID_HEIGHT][GRID_WI
 
 int main(void){
     SDL_Init(SDL_INIT_VIDEO); 
-    SDL_Window* window = SDL_CreateWindow("Alg Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    SDL_Window* window = SDL_CreateWindow("Game of Life", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     const Uint32 RENDER_MS = 16;
