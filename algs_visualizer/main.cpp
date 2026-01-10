@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 
 #define WIDTH 700
@@ -38,44 +39,55 @@ void draw_grid(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH]){
 
 
 void bfs(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH], int points[2][2]){
+    static std::vector<Cell> neighbours;
+    static std::vector<Cell> visited;
+    static bool initialized = false;
+    static bool done = false;
 
-    //std::cout << "From: " << points[0][0] << points[0][1] << "\n" << "To " << points[1][0] << points[1][1] << "\n"; 
-    std::vector<Cell> neighbours;
-    std::vector<Cell> visited;
+    if(done) return;
 
-    Cell start = { points[0][0], points[0][1], COLOR_RED };
-    Cell end = { points[1][0], points[1][1], COLOR_RED };
+    if(!initialized){
+        Cell start = { points[0][1], points[0][0], COLOR_RED };
+        neighbours.push_back(start);
+        initialized = true;
+    }
 
-    neighbours.push_back(start);
+    Cell start = { points[0][1], points[0][0], COLOR_RED };
+    Cell end = { points[1][1], points[1][0], COLOR_RED };
 
-    while(!neighbours.empty()){
-        Cell current_neighbour = neighbours.front();
-        neighbours.erase(neighbours.begin());
-        if(std::find(visited.begin(), visited.end(), current_neighbour) != visited.end()) continue;
+    // Process just one cell per call to animate
+    if(neighbours.empty()){
+        done = true;
+        return;
+    }
 
-        visited.push_back(current_neighbour);
-        if(!(current_neighbour == start) && !(current_neighbour == end)){
-            grid[current_neighbour.y][current_neighbour.x].color = COLOR_GREEN;
+    Cell current_neighbour = neighbours.front();
+    neighbours.erase(neighbours.begin());
+
+    if(std::find(visited.begin(), visited.end(), current_neighbour) != visited.end()) return;
+
+    visited.push_back(current_neighbour);
+    if(!(current_neighbour == start) && !(current_neighbour == end)){
+        grid[current_neighbour.y][current_neighbour.x].color = COLOR_GREEN;
+    }
+
+    if(current_neighbour == end){
+        done = true;
+        return;
+    }
+
+    for(int i = -1; i <= 1; i++){
+        for(int j = -1; j <= 1; j++){
+            if(i == 0 && j == 0) continue;
+            int x = current_neighbour.x + j;
+            int y = current_neighbour.y + i;
+            if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT || grid[y][x].color == COLOR_BLUE) continue;
+            Cell next = { x, y, COLOR_BLACK };
+
+            if(std::find(visited.begin(), visited.end(), next) != visited.end()) continue;
+
+            neighbours.push_back(next);
         }
-
-        if(current_neighbour == end) break;
-
-        for(int i = -1; i <= 1; i++){
-            for(int j = -1; j <= 1; j++){
-                if(i == 0 && j == 0) continue;
-                int x = current_neighbour.x + j;
-                int y = current_neighbour.y + i;
-                if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT || grid[y][x].color == COLOR_BLUE) continue;
-                Cell next = { x, y, COLOR_BLACK };
-
-                if(std::find(visited.begin(), visited.end(), next) != visited.end()) continue;
-
-                neighbours.push_back(next);
-                if(!(next == start) && !(next == end)){
-                    grid[y][x].color = COLOR_BLACK;
-                }
-            }
-        } 
     }
 }
 
@@ -96,7 +108,7 @@ int main(void){
     static Cell grid[GRID_HEIGHT][GRID_WIDTH];
     for(int i = 0; i < GRID_HEIGHT; i++){
         for(int j = 0; j < GRID_WIDTH; j++){
-            grid[i][j] = { i, j , COLOR_WHITE };
+            grid[i][j] = { j, i , COLOR_WHITE };
         }
     }
     
@@ -154,7 +166,7 @@ int main(void){
         }
         SDL_UpdateWindowSurface(window);
     }
-    SDL_DestroyWindowSurface(window);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }
