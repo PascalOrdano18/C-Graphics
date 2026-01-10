@@ -2,12 +2,13 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 
 #define WIDTH 700
 #define HEIGHT 700
 
-#define CELL_LEN 30
+#define CELL_LEN 12
 #define GRID_WIDTH WIDTH / CELL_LEN
 #define GRID_HEIGHT HEIGHT / CELL_LEN
 
@@ -16,6 +17,7 @@
 #define COLOR_BLUE 0xFF1111DD
 #define COLOR_RED 0xFFFF0000
 #define COLOR_GREEN 0xFF00FF00
+#define COLOR_YELLOW 0xFFFFFF00
 
 struct Cell{
     int x;
@@ -41,19 +43,21 @@ void draw_grid(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH]){
 void bfs(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH], int points[2][2]){
     static std::vector<Cell> neighbours;
     static std::vector<Cell> visited;
+    static std::map<std::pair<int,int>, std::pair<int,int>> parent;
     static bool initialized = false;
     static bool done = false;
+    static bool found = false;
 
     if(done) return;
 
-    if(!initialized){
-        Cell start = { points[0][1], points[0][0], COLOR_RED };
-        neighbours.push_back(start);
-        initialized = true;
-    }
-
     Cell start = { points[0][1], points[0][0], COLOR_RED };
     Cell end = { points[1][1], points[1][0], COLOR_RED };
+
+    if(!initialized){
+        neighbours.push_back(start);
+        parent[{start.x, start.y}] = {-1, -1};
+        initialized = true;
+    }
 
     // Process just one cell per call to animate
     if(neighbours.empty()){
@@ -72,6 +76,15 @@ void bfs(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH], int points[2]
     }
 
     if(current_neighbour == end){
+        // Reconstruct path
+        std::pair<int,int> curr = {end.x, end.y};
+        while(curr.first != -1 && curr.second != -1){
+            if(!(curr.first == start.x && curr.second == start.y) &&
+               !(curr.first == end.x && curr.second == end.y)){
+                grid[curr.second][curr.first].color = COLOR_YELLOW;
+            }
+            curr = parent[curr];
+        }
         done = true;
         return;
     }
@@ -85,7 +98,9 @@ void bfs(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH], int points[2]
             Cell next = { x, y, COLOR_BLACK };
 
             if(std::find(visited.begin(), visited.end(), next) != visited.end()) continue;
+            if(parent.find({x, y}) != parent.end()) continue;
 
+            parent[{x, y}] = {current_neighbour.x, current_neighbour.y};
             neighbours.push_back(next);
         }
     }
@@ -96,7 +111,7 @@ void bfs(SDL_Surface* surface, Cell grid[GRID_HEIGHT][GRID_WIDTH], int points[2]
 
 int main(void){
     SDL_Init(SDL_INIT_VIDEO); 
-    SDL_Window* window = SDL_CreateWindow("Game of Life", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    SDL_Window* window = SDL_CreateWindow("Algorithm Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     const Uint32 RENDER_MS = 16;
