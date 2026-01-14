@@ -7,10 +7,12 @@
 #define WIDTH 700
 #define HEIGHT 700
 
+#define GRAVITY 8.0f
+
 struct Player{
     float x = 100.0f;
     float y = 100.0f;
-    float speed = 200.0f;
+    float speed = 300.0f;
     int size = 32;
 };
 
@@ -18,7 +20,8 @@ struct Player{
 struct Obstacle{
     float x;
     float y;
-    int size;
+    int height = 25;
+    int length;
 };
 
 
@@ -30,8 +33,8 @@ void draw_obstacles(SDL_Renderer* renderer, const std::vector<Obstacle>& obstacl
         SDL_Rect rect = {
             (int)obs.x,
             (int)obs.y,
-            obs.size,
-            obs.size,
+            obs.length,
+            obs.height,
         };
         SDL_RenderFillRect(renderer, &rect);
     }
@@ -42,9 +45,9 @@ bool intersects(const Player& p, const Obstacle& obs){
     float epsilon = 0.00001f;
     return !(
                p.x + p.size <= obs.x + epsilon
-            || p.x >= obs.x + obs.size - epsilon
+            || p.x >= obs.x + obs.length - epsilon
             || p.y + p.size <= obs.y + epsilon
-            || p.y >= obs.y + obs.size - epsilon
+            || p.y >= obs.y + obs.height - epsilon
         );
 }
 
@@ -57,17 +60,19 @@ int main(){
 
     Player p;
     bool up = false, down = false, right = false, left = false;
-
+    bool jmp = false;
 
     std::uniform_int_distribution<int> distY(0.0f, 600.f);
+    std::uniform_int_distribution<int> distL(25, 300);
 
-    int obs_size = 5;
+    int obs_size = 15;
     std::vector<Obstacle> obstacles(obs_size);
     for(int i = 0; i < obs_size; i++){
         obstacles.push_back({
             (float)distY(rng),
             (float)distY(rng),
-            25
+            25,
+            (int)distL(rng)
         });
     }
 
@@ -88,6 +93,7 @@ int main(){
                     case SDLK_s: down = true; break;
                     case SDLK_d: right = true; break;
                     case SDLK_a: left = true; break;
+                    case SDLK_SPACE: jmp = true; break;
                 }
             }
             if(event.type == SDL_KEYUP && event.key.repeat == 0){
@@ -96,6 +102,7 @@ int main(){
                     case SDLK_s: down = false; break;
                     case SDLK_d: right = false; break;
                     case SDLK_a: left = false; break;
+                    case SDLK_SPACE: jmp = false; break;
                 }
             }
         }
@@ -108,14 +115,15 @@ int main(){
         float vx = 0.0f;
         float vy = 0.0f;
 
-        if(up) vy -= 1.0f;
-        if(down) vy += 1.0f;
+        //if(up) vy -= 1.0f;
+        //if(down) vy += 1.0f;
         if(right) vx += 1.0f;
         if(left) vx -= 1.0f;
 
+        if(jmp) vy -= 3.5f;
 
         float dx = vx * p.speed * (float) dt;
-        float dy = vy * p.speed * (float) dt;
+        float dy = (vy * p.speed * (float) dt) + GRAVITY;
 
         p.x += dx;
 
@@ -124,7 +132,7 @@ int main(){
                 if(dx > 0){
                     p.x = obs.x - p.size;
                 } else if(dx < 0){
-                    p.x = obs.x + p.size;
+                    p.x = obs.x + obs.length;
                 }
             }
         }
@@ -135,7 +143,7 @@ int main(){
                 if(dy > 0){
                     p.y = obs.y - p.size;
                 } else if(dy < 0){
-                    p.y = obs.y + p.size;
+                    p.y = obs.y + obs.height;
                 }
             }
         }
