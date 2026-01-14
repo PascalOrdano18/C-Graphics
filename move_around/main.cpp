@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <algorithm>
-
+#include <random>
 
 #define WIDTH 700
 #define HEIGHT 700
@@ -14,14 +14,62 @@ struct Player{
     int size = 32;
 };
 
+
+struct Obstacle{
+    float x;
+    float y;
+    int size;
+};
+
+
+
+void draw_obstacles(SDL_Renderer* renderer, const std::vector<Obstacle>& obstacles){
+    SDL_SetRenderDrawColor(renderer, 200, 80, 80, 255);
+
+    for(const Obstacle& obs : obstacles){
+        SDL_Rect rect = {
+            (int)obs.x,
+            (int)obs.y,
+            obs.size,
+            obs.size,
+        };
+        SDL_RenderFillRect(renderer, &rect);
+    }
+}
+
+
+bool intersects(const Player& p, const Obstacle& obs){
+    float epsilon = 0.00001f;
+    return !(
+               p.x + p.size <= obs.x + epsilon
+            || p.x >= obs.x + obs.size - epsilon
+            || p.y + p.size <= obs.y + epsilon
+            || p.y >= obs.y + obs.size - epsilon
+        );
+}
+
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Move Around", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    std::mt19937 rng(std::random_device{}());
 
     Player p;
     bool up = false, down = false, right = false, left = false;
+
+
+    std::uniform_int_distribution<int> distY(0.0f, 600.f);
+
+    int obs_size = 5;
+    std::vector<Obstacle> obstacles(obs_size);
+    for(int i = 0; i < obs_size; i++){
+        obstacles.push_back({
+            (float)distY(rng),
+            (float)distY(rng),
+            25
+        });
+    }
 
     Uint64 prevCounter = SDL_GetPerformanceCounter();
     const double freq = (double)SDL_GetPerformanceFrequency();
@@ -66,8 +114,31 @@ int main(){
         if(left) vx -= 1.0f;
 
 
-        p.x += vx * p.speed * (float) dt;
-        p.y += vy * p.speed * (float) dt;
+        float dx = vx * p.speed * (float) dt;
+        float dy = vy * p.speed * (float) dt;
+
+        p.x += dx;
+
+        for(const Obstacle& obs : obstacles){
+            if(intersects(p, obs)){
+                if(dx > 0){
+                    p.x = obs.x - p.size;
+                } else if(dx < 0){
+                    p.x = obs.x + p.size;
+                }
+            }
+        }
+
+        p.y += dy;
+        for(const Obstacle& obs : obstacles){
+            if(intersects(p, obs)){
+                if(dy > 0){
+                    p.y = obs.y - p.size;
+                } else if(dy < 0){
+                    p.y = obs.y + p.size;
+                }
+            }
+        }
 
         if(p.x < 0) p.x = 0;
         if(p.y < 0) p.y = 0;
@@ -75,12 +146,15 @@ int main(){
         if(p.x >= WIDTH - p.size) p.x = WIDTH - p.size;
         if(p.y >= HEIGHT - p.size) p.y = HEIGHT - p.size;
 
+
         SDL_SetRenderDrawColor(renderer, 10, 10, 12, 255);
         SDL_RenderClear(renderer);
 
         SDL_Rect rect = { (int)p.x, (int) p.y, p.size, p.size };
         SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);
         SDL_RenderFillRect(renderer, &rect);
+
+        draw_obstacles(renderer, obstacles);
 
         SDL_RenderPresent(renderer);
     }
