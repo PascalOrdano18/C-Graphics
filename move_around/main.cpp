@@ -3,11 +3,14 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #define WIDTH 700
 #define HEIGHT 700
 
-#define GRAVITY 8.0f
+#define GRAVITY 3600.0f
 
 struct Player{
     float x = 100.0f;
@@ -16,12 +19,24 @@ struct Player{
     int size = 32;
 };
 
+struct Enemy{
+    float x;
+    float y;
+    int size = 20;
+};
+
 
 struct Obstacle{
     float x;
     float y;
     int height = 25;
     int length;
+};
+
+struct Level{
+    float spawnX;
+    float spawnY;
+    std::vector<Obstacle> obstacles;
 };
 
 
@@ -51,6 +66,34 @@ bool intersects(const Player& p, const Obstacle& obs){
         );
 }
 
+
+Level loadLevel(const std::string& path){
+    Level level;
+
+    std::ifstream file(path);
+    if(!file.is_open()) return level;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string type;
+        iss >> type;
+
+        if (type == "spawn") {
+            iss >> level.spawnX >> level.spawnY;
+        }
+        else if (type == "obstacle") {
+            Obstacle obs;
+            iss >> obs.x >> obs.y >> obs.length >> obs.height;
+            level.obstacles.push_back(obs);
+        }
+    }
+
+    return level;
+}
+
+
+
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Move Around", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
@@ -58,23 +101,32 @@ int main(){
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     std::mt19937 rng(std::random_device{}());
 
-    Player p;
+    float yVel = 0.0f;
+    bool onGround = false;
     bool up = false, down = false, right = false, left = false;
     bool jmp = false;
 
-    std::uniform_int_distribution<int> distY(0.0f, 600.f);
-    std::uniform_int_distribution<int> distL(25, 300);
+    // std::uniform_int_distribution<int> distY(0.0f, 600.f);
+    // std::uniform_int_distribution<int> distL(25, 300);
+    //
+    // int obs_size = 20;
+    // std::vector<Obstacle> obstacles;
+    // obstacles.reserve(obs_size);
+    // for(int i = 0; i < obs_size; i++){
+    //     obstacles.push_back({
+    //         (float)distY(rng),
+    //         (float)distY(rng),
+    //         25,
+    //         (int)distL(rng)
+    //     });
+    // }
 
-    int obs_size = 15;
-    std::vector<Obstacle> obstacles(obs_size);
-    for(int i = 0; i < obs_size; i++){
-        obstacles.push_back({
-            (float)distY(rng),
-            (float)distY(rng),
-            25,
-            (int)distL(rng)
-        });
-    }
+    Level currentLevel = loadLevel("levels/level1.txt");
+    Player p;
+    p.x = currentLevel.spawnX;
+    p.y = currentLevel.spawnY;
+
+    std::vector<Obstacle> obstacles = currentLevel.obstacles;
 
     Uint64 prevCounter = SDL_GetPerformanceCounter();
     const double freq = (double)SDL_GetPerformanceFrequency();
@@ -120,10 +172,17 @@ int main(){
         if(right) vx += 1.0f;
         if(left) vx -= 1.0f;
 
-        if(jmp) vy -= 3.5f;
-
         float dx = vx * p.speed * (float) dt;
-        float dy = (vy * p.speed * (float) dt) + GRAVITY;
+        float friction = 0.9f;
+
+        yVel += GRAVITY * (float)dt;
+        if(jmp && onGround){
+            yVel = -790.0f;
+            onGround = false;
+        }
+
+        float dy = yVel * (float) dt;
+
 
         p.x += dx;
 
@@ -142,8 +201,11 @@ int main(){
             if(intersects(p, obs)){
                 if(dy > 0){
                     p.y = obs.y - p.size;
+                    yVel = 0.0f;
+                    onGround = true;
                 } else if(dy < 0){
                     p.y = obs.y + obs.height;
+                    yVel = 0.0f;
                 }
             }
         }
@@ -152,7 +214,10 @@ int main(){
         if(p.y < 0) p.y = 0;
 
         if(p.x >= WIDTH - p.size) p.x = WIDTH - p.size;
-        if(p.y >= HEIGHT - p.size) p.y = HEIGHT - p.size;
+        if(p.y >= HEIGHT - p.size){
+            p.y = HEIGHT - p.size;
+            onGround = true;
+        }
 
 
         SDL_SetRenderDrawColor(renderer, 10, 10, 12, 255);

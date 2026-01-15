@@ -1,0 +1,27 @@
+# Player spawn
+spawn 80 520
+
+# Ground (safe base)
+obstacle 0 600 700 25
+
+# Step 1 – easy intro
+obstacle 120 540 120 25
+obstacle 300 520 140 25
+
+# Step 2 – gentle climb
+obstacle 180 460 120 25
+obstacle 360 440 140 25
+
+# Step 3 – short precision jump
+obstacle 260 380 100 25
+
+# Safety platform (fall recovery)
+obstacle 0 420 160 25
+
+# Step 4 – final climb
+obstacle 420 340 140 25
+obstacle 260 300 120 25
+
+# Final platform (goal area)
+obstacle 80 260 160 25
+
