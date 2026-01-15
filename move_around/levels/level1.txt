@@ -1,6 +1,9 @@
 # Player spawn
 spawn 80 520
 
+# Obj spawn
+object 80 260
+
 # Ground (safe base)
 obstacle 0 600 700 25
 

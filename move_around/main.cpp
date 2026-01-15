@@ -37,8 +37,15 @@ struct Level{
     float spawnX;
     float spawnY;
     std::vector<Obstacle> obstacles;
+    float objX;
+    float objY;
 };
 
+struct Object{
+    float x;
+    float y;
+    int size = 25;
+};
 
 
 void draw_obstacles(SDL_Renderer* renderer, const std::vector<Obstacle>& obstacles){
@@ -53,6 +60,13 @@ void draw_obstacles(SDL_Renderer* renderer, const std::vector<Obstacle>& obstacl
         };
         SDL_RenderFillRect(renderer, &rect);
     }
+}
+
+
+void draw_object(SDL_Renderer* renderer, const Object& obj){
+    SDL_SetRenderDrawColor(renderer, 200, 0, 0, 255);
+    SDL_Rect rect = { (int)obj.x, (int)obj.y, obj.size, obj.size };
+    SDL_RenderFillRect(renderer, &rect);
 }
 
 
@@ -81,11 +95,12 @@ Level loadLevel(const std::string& path){
 
         if (type == "spawn") {
             iss >> level.spawnX >> level.spawnY;
-        }
-        else if (type == "obstacle") {
+        } else if (type == "obstacle") {
             Obstacle obs;
             iss >> obs.x >> obs.y >> obs.length >> obs.height;
             level.obstacles.push_back(obs);
+        } else if (type == "object"){
+            iss >> level.objX >> level.objY;
         }
     }
 
@@ -125,6 +140,12 @@ int main(){
     Player p;
     p.x = currentLevel.spawnX;
     p.y = currentLevel.spawnY;
+
+    Object obj = {
+        currentLevel.objX;
+        currentLevel.objY;
+        25;
+    };
 
     std::vector<Obstacle> obstacles = currentLevel.obstacles;
 
@@ -228,6 +249,7 @@ int main(){
         SDL_RenderFillRect(renderer, &rect);
 
         draw_obstacles(renderer, obstacles);
+        draw_object(renderer, obj);
 
         SDL_RenderPresent(renderer);
     }
