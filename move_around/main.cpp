@@ -80,6 +80,17 @@ bool intersects(const Player& p, const Obstacle& obs){
         );
 }
 
+bool intersects_obj(const Player& p, const Object& obs){
+    float epsilon = 0.00001f;
+    return !(
+               p.x + p.size <= obs.x + epsilon
+            || p.x >= obs.x + obs.size - epsilon
+            || p.y + p.size <= obs.y + epsilon
+            || p.y >= obs.y + obs.size - epsilon
+        );
+}
+
+
 
 Level loadLevel(const std::string& path){
     Level level;
@@ -142,9 +153,9 @@ int main(){
     p.y = currentLevel.spawnY;
 
     Object obj = {
-        currentLevel.objX;
-        currentLevel.objY;
-        25;
+        currentLevel.objX,
+        currentLevel.objY,
+        25,
     };
 
     std::vector<Obstacle> obstacles = currentLevel.obstacles;
@@ -240,6 +251,11 @@ int main(){
             onGround = true;
         }
 
+        if(intersects_obj(p, obj)){
+            SDL_Rect rect = { 0, 0, WIDTH, HEIGHT };
+            SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);
+            SDL_RenderFillRect(renderer, &rect);
+        }
 
         SDL_SetRenderDrawColor(renderer, 10, 10, 12, 255);
         SDL_RenderClear(renderer);
