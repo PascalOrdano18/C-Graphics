@@ -251,11 +251,7 @@ int main(){
             onGround = true;
         }
 
-        if(intersects_obj(p, obj)){
-            SDL_Rect rect = { 0, 0, WIDTH, HEIGHT };
-            SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);
-            SDL_RenderFillRect(renderer, &rect);
-        }
+        
 
         SDL_SetRenderDrawColor(renderer, 10, 10, 12, 255);
         SDL_RenderClear(renderer);
@@ -266,7 +262,11 @@ int main(){
 
         draw_obstacles(renderer, obstacles);
         draw_object(renderer, obj);
-
+        if(intersects_obj(p, obj)){
+            SDL_Rect rect = { 0, 0, WIDTH, HEIGHT };
+            SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);
+            SDL_RenderFillRect(renderer, &rect);
+        }
         SDL_RenderPresent(renderer);
     }
     SDL_DestroyRenderer(renderer);
