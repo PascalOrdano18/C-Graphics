@@ -266,6 +266,15 @@ int main(){
             SDL_Rect rect = { 0, 0, WIDTH, HEIGHT };
             SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);
             SDL_RenderFillRect(renderer, &rect);
+
+            currentLevel = loadLevel("levels/level2.txt");
+            p.x = currentLevel.spawnX;
+            p.y = currentLevel.spawnY;
+
+            yVel = 0.0f;
+            onGround = false;
+
+            obstacles = currentLevel.obstacles;
         }
         SDL_RenderPresent(renderer);
     }

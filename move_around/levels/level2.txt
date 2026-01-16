@@ -1,0 +1,40 @@
+# LEVEL 2: Stair Run + Gaps + Final Tower
+# format:
+# spawn x y
+# obstacle x y length height
+# object x y
+
+spawn 60 560
+
+# --- Ground segments with gaps (forces jumps) ---
+obstacle 0   640 220 25
+obstacle 280 640 170 25
+obstacle 510 640 190 25
+
+# --- Small “staircase” (nice rhythm jumps) ---
+obstacle 260 585 70 25
+obstacle 350 540 70 25
+obstacle 440 495 70 25
+obstacle 530 450 70 25
+
+# --- Mid-air platforms (timing) ---
+obstacle 140 520 90 25
+obstacle 40  450 120 25
+obstacle 220 420 90 25
+obstacle 360 380 120 25
+
+# --- “Tunnel” / low ceiling section (forces control) ---
+obstacle 410 300 220 25     # ceiling
+obstacle 410 360 220 25     # floor ledge (thin corridor)
+
+# --- Final tower (climb on ledges) ---
+obstacle 630 560 60 25
+obstacle 600 500 90 25
+obstacle 570 440 120 25
+obstacle 540 380 150 25
+obstacle 510 320 180 25
+obstacle 480 260 210 25
+obstacle 450 200 240 25
+
+# Goal object near the top of the tower
+object 620 150
