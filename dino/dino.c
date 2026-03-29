@@ -10,16 +10,19 @@
 #define DINO_WIDTH 40
 #define DINO_HEIGHT 44
 
-// Color palette (desert theme)
-#define COLOR_SKY       0xFF87CEEB
-#define COLOR_GROUND    0xFFDEB887
-#define COLOR_DINO      0xFF2F4F4F
-#define COLOR_CACTUS    0xFF228B22
-#define COLOR_PTERO     0xFF8B4513
-#define COLOR_CLOUD     0xFFFFFFFF
-#define COLOR_SCORE     0xFF333333
-#define COLOR_GAMEOVER  0xFFCC0000
+// Color palette (dark neon theme)
+#define COLOR_SKY       0xFF0D0D2B
+#define COLOR_GROUND    0xFF1A1A3E
+#define COLOR_DINO      0xFF00FFCC
+#define COLOR_CACTUS    0xFFFF00FF
+#define COLOR_PTERO     0xFFFF6600
+#define COLOR_CLOUD     0xFF1E1E4A
+#define COLOR_SCORE     0xFF00CCFF
+#define COLOR_GAMEOVER  0xFFFF0066
 #define COLOR_WHITE     0xFFFFFFFF
+#define COLOR_GROUND_LINE 0xFF6600FF
+#define COLOR_DINO_EYE  0xFFFF0066
+#define COLOR_HI_SCORE  0xFF9966FF
 
 #define MAX_OBSTACLES 10
 #define MAX_CLOUDS 5
@@ -105,7 +108,7 @@ void draw_dino(SDL_Surface* surface, Dino* dino) {
         SDL_FillRect(surface, &head, COLOR_DINO);
         // Eye
         SDL_Rect eye = { x + 48, y + 17, 4, 4 };
-        SDL_FillRect(surface, &eye, COLOR_SKY);
+        SDL_FillRect(surface, &eye, COLOR_DINO_EYE);
         // Legs (animated)
         if (dino->leg_frame < 5) {
             SDL_Rect leg1 = { x + 10, y + 44, 6, 10 };
@@ -128,7 +131,7 @@ void draw_dino(SDL_Surface* surface, Dino* dino) {
         SDL_FillRect(surface, &head, COLOR_DINO);
         // Eye
         SDL_Rect eye = { x + 32, y + 4, 4, 4 };
-        SDL_FillRect(surface, &eye, COLOR_SKY);
+        SDL_FillRect(surface, &eye, COLOR_DINO_EYE);
         // Tail
         SDL_Rect tail = { x, y + 20, 10, 8 };
         SDL_FillRect(surface, &tail, COLOR_DINO);
@@ -311,9 +314,9 @@ void draw_ground(SDL_Surface* surface) {
     SDL_Rect ground = { 0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y };
     SDL_FillRect(surface, &ground, COLOR_GROUND);
 
-    // Ground line
-    SDL_Rect line = { 0, GROUND_Y, WIDTH, 2 };
-    SDL_FillRect(surface, &line, COLOR_SCORE);
+    // Ground line (neon glow)
+    SDL_Rect line = { 0, GROUND_Y, WIDTH, 3 };
+    SDL_FillRect(surface, &line, COLOR_GROUND_LINE);
 }
 
 int check_collision(Dino* dino, Obstacle* obs) {
@@ -356,20 +359,30 @@ void reset_game(Dino* dino) {
 }
 
 void draw_game_over(SDL_Surface* surface) {
-    // Semi-transparent overlay effect (darken center)
-    SDL_Rect overlay = { WIDTH/2 - 150, HEIGHT/2 - 60, 300, 120 };
-    SDL_FillRect(surface, &overlay, 0xFF000000);
+    // Dark overlay with neon border
+    SDL_Rect overlay = { WIDTH/2 - 160, HEIGHT/2 - 70, 320, 140 };
+    SDL_FillRect(surface, &overlay, 0xFF050515);
+
+    // Neon border (top, bottom, left, right)
+    SDL_Rect border_t = { WIDTH/2 - 160, HEIGHT/2 - 70, 320, 3 };
+    SDL_Rect border_b = { WIDTH/2 - 160, HEIGHT/2 + 67, 320, 3 };
+    SDL_Rect border_l = { WIDTH/2 - 160, HEIGHT/2 - 70, 3, 140 };
+    SDL_Rect border_r = { WIDTH/2 + 157, HEIGHT/2 - 70, 3, 140 };
+    SDL_FillRect(surface, &border_t, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_b, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_l, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_r, COLOR_GAMEOVER);
 
     // "GAME OVER" text approximation
-    draw_number(surface, 0, WIDTH/2 - 80, HEIGHT/2 - 40, 4, COLOR_GAMEOVER);
+    draw_number(surface, 0, WIDTH/2 - 80, HEIGHT/2 - 50, 4, COLOR_GAMEOVER);
 
     // Score display
-    draw_number(surface, score, WIDTH/2 - 50, HEIGHT/2 + 10, 3, COLOR_WHITE);
+    draw_number(surface, score, WIDTH/2 - 50, HEIGHT/2 + 10, 3, COLOR_SCORE);
 }
 
 int main(void) {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Dino Run!",
+    SDL_Window* window = SDL_CreateWindow("Neon Dino Run",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
@@ -504,7 +517,7 @@ int main(void) {
         // HUD
         draw_number(surface, score, WIDTH - 150, 20, 3, COLOR_SCORE);
         if (high_score > 0) {
-            draw_number(surface, high_score, WIDTH - 300, 20, 2, COLOR_SCORE);
+            draw_number(surface, high_score, WIDTH - 300, 20, 2, COLOR_HI_SCORE);
         }
 
         if (game_state == STATE_GAMEOVER) {
