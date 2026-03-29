@@ -10,16 +10,34 @@
 #define DINO_WIDTH 40
 #define DINO_HEIGHT 44
 
-// Color palette (desert theme)
-#define COLOR_SKY       0xFF87CEEB
-#define COLOR_GROUND    0xFFDEB887
-#define COLOR_DINO      0xFF2F4F4F
-#define COLOR_CACTUS    0xFF228B22
-#define COLOR_PTERO     0xFF8B4513
-#define COLOR_CLOUD     0xFFFFFFFF
-#define COLOR_SCORE     0xFF333333
-#define COLOR_GAMEOVER  0xFFCC0000
+// Color palette (night neon theme)
+#define COLOR_SKY       0xFF1A1A2E
+#define COLOR_SKY_MID   0xFF16213E
+#define COLOR_SKY_LOW   0xFF0F3460
+#define COLOR_GROUND    0xFF2C2C54
+#define COLOR_GROUND_LINE 0xFF706FD3
+#define COLOR_DINO      0xFF00E676
+#define COLOR_DINO_EYE  0xFFFFFFFF
+#define COLOR_CACTUS    0xFFE94560
+#define COLOR_PTERO     0xFFFF9800
+#define COLOR_PTERO_WING 0xFFFFB74D
+#define COLOR_CLOUD     0xFF3A3A6A
+#define COLOR_STAR      0xFFFFFFFF
+#define COLOR_SCORE     0xFF82AAFF
+#define COLOR_HISCORE   0xFF616161
+#define COLOR_GAMEOVER  0xFFFF5252
 #define COLOR_WHITE     0xFFFFFFFF
+#define COLOR_OVERLAY   0xCC000000
+
+#define MAX_STARS 40
+
+typedef struct {
+    int x, y;
+    int size;
+    int twinkle_phase;
+} Star;
+
+Star stars[MAX_STARS];
 
 #define MAX_OBSTACLES 10
 #define MAX_CLOUDS 5
@@ -105,7 +123,7 @@ void draw_dino(SDL_Surface* surface, Dino* dino) {
         SDL_FillRect(surface, &head, COLOR_DINO);
         // Eye
         SDL_Rect eye = { x + 48, y + 17, 4, 4 };
-        SDL_FillRect(surface, &eye, COLOR_SKY);
+        SDL_FillRect(surface, &eye, COLOR_DINO_EYE);
         // Legs (animated)
         if (dino->leg_frame < 5) {
             SDL_Rect leg1 = { x + 10, y + 44, 6, 10 };
@@ -128,7 +146,7 @@ void draw_dino(SDL_Surface* surface, Dino* dino) {
         SDL_FillRect(surface, &head, COLOR_DINO);
         // Eye
         SDL_Rect eye = { x + 32, y + 4, 4, 4 };
-        SDL_FillRect(surface, &eye, COLOR_SKY);
+        SDL_FillRect(surface, &eye, COLOR_DINO_EYE);
         // Tail
         SDL_Rect tail = { x, y + 20, 10, 8 };
         SDL_FillRect(surface, &tail, COLOR_DINO);
@@ -160,9 +178,18 @@ void init_clouds(void) {
     for (int i = 0; i < MAX_CLOUDS; i++) {
         clouds[i].x = rand() % WIDTH;
         clouds[i].y = 50 + rand() % 150;
-        clouds[i].vx = -0.5f - (rand() % 100) / 100.0f;
+        clouds[i].vx = -0.3f - (rand() % 50) / 100.0f;
         clouds[i].width = 60 + rand() % 40;
         clouds[i].height = 20 + rand() % 15;
+    }
+}
+
+void init_stars(void) {
+    for (int i = 0; i < MAX_STARS; i++) {
+        stars[i].x = rand() % WIDTH;
+        stars[i].y = rand() % (GROUND_Y - 30);
+        stars[i].size = 1 + rand() % 3;
+        stars[i].twinkle_phase = rand() % 20;
     }
 }
 
@@ -281,10 +308,10 @@ void draw_pterodactyl(SDL_Surface* surface, Obstacle* obs, int frame) {
     // Wings (animated)
     if (frame < 5) {
         SDL_Rect wing = { x, y, 30, 8 };
-        SDL_FillRect(surface, &wing, COLOR_PTERO);
+        SDL_FillRect(surface, &wing, COLOR_PTERO_WING);
     } else {
         SDL_Rect wing = { x, y + 20, 30, 8 };
-        SDL_FillRect(surface, &wing, COLOR_PTERO);
+        SDL_FillRect(surface, &wing, COLOR_PTERO_WING);
     }
 }
 
@@ -306,14 +333,42 @@ void draw_clouds(SDL_Surface* surface) {
     }
 }
 
+void draw_sky_gradient(SDL_Surface* surface) {
+    // Three-band gradient for night sky
+    int band_h = GROUND_Y / 3;
+    SDL_Rect top = { 0, 0, WIDTH, band_h };
+    SDL_FillRect(surface, &top, COLOR_SKY);
+    SDL_Rect mid = { 0, band_h, WIDTH, band_h };
+    SDL_FillRect(surface, &mid, COLOR_SKY_MID);
+    SDL_Rect low = { 0, band_h * 2, WIDTH, GROUND_Y - band_h * 2 };
+    SDL_FillRect(surface, &low, COLOR_SKY_LOW);
+}
+
+void draw_stars(SDL_Surface* surface, int frame) {
+    for (int i = 0; i < MAX_STARS; i++) {
+        int phase = (frame / 3 + stars[i].twinkle_phase) % 20;
+        if (phase < 16) {  // twinkle: briefly dim
+            int s = stars[i].size;
+            SDL_Rect star = { stars[i].x, stars[i].y, s, s };
+            SDL_FillRect(surface, &star, COLOR_STAR);
+        }
+    }
+}
+
 void draw_ground(SDL_Surface* surface) {
     // Main ground
     SDL_Rect ground = { 0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y };
     SDL_FillRect(surface, &ground, COLOR_GROUND);
 
-    // Ground line
-    SDL_Rect line = { 0, GROUND_Y, WIDTH, 2 };
-    SDL_FillRect(surface, &line, COLOR_SCORE);
+    // Neon ground line
+    SDL_Rect line = { 0, GROUND_Y, WIDTH, 3 };
+    SDL_FillRect(surface, &line, COLOR_GROUND_LINE);
+
+    // Dashed texture on ground
+    for (int i = 0; i < WIDTH; i += 30) {
+        SDL_Rect dash = { i, GROUND_Y + 12, 12, 2 };
+        SDL_FillRect(surface, &dash, COLOR_GROUND_LINE);
+    }
 }
 
 int check_collision(Dino* dino, Obstacle* obs) {
@@ -356,12 +411,22 @@ void reset_game(Dino* dino) {
 }
 
 void draw_game_over(SDL_Surface* surface) {
-    // Semi-transparent overlay effect (darken center)
-    SDL_Rect overlay = { WIDTH/2 - 150, HEIGHT/2 - 60, 300, 120 };
-    SDL_FillRect(surface, &overlay, 0xFF000000);
+    // Dark overlay
+    SDL_Rect overlay = { WIDTH/2 - 160, HEIGHT/2 - 70, 320, 140 };
+    SDL_FillRect(surface, &overlay, 0xFF0A0A1A);
+
+    // Border glow
+    SDL_Rect border_t = { WIDTH/2 - 160, HEIGHT/2 - 70, 320, 3 };
+    SDL_Rect border_b = { WIDTH/2 - 160, HEIGHT/2 + 67, 320, 3 };
+    SDL_Rect border_l = { WIDTH/2 - 160, HEIGHT/2 - 70, 3, 140 };
+    SDL_Rect border_r = { WIDTH/2 + 157, HEIGHT/2 - 70, 3, 140 };
+    SDL_FillRect(surface, &border_t, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_b, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_l, COLOR_GAMEOVER);
+    SDL_FillRect(surface, &border_r, COLOR_GAMEOVER);
 
     // "GAME OVER" text approximation
-    draw_number(surface, 0, WIDTH/2 - 80, HEIGHT/2 - 40, 4, COLOR_GAMEOVER);
+    draw_number(surface, 0, WIDTH/2 - 80, HEIGHT/2 - 50, 4, COLOR_GAMEOVER);
 
     // Score display
     draw_number(surface, score, WIDTH/2 - 50, HEIGHT/2 + 10, 3, COLOR_WHITE);
@@ -369,13 +434,14 @@ void draw_game_over(SDL_Surface* surface) {
 
 int main(void) {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Dino Run!",
+    SDL_Window* window = SDL_CreateWindow("Neon Dino",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     srand(time(NULL));
     init_obstacles();
     init_clouds();
+    init_stars();
 
     const Uint32 SIM_MS = 16;
     Uint32 last = SDL_GetTicks();
@@ -495,7 +561,8 @@ int main(void) {
         }
 
         // Render
-        SDL_FillRect(surface, NULL, COLOR_SKY);
+        draw_sky_gradient(surface);
+        draw_stars(surface, anim_frame);
         draw_clouds(surface);
         draw_ground(surface);
         draw_dino(surface, &dino);
@@ -504,7 +571,7 @@ int main(void) {
         // HUD
         draw_number(surface, score, WIDTH - 150, 20, 3, COLOR_SCORE);
         if (high_score > 0) {
-            draw_number(surface, high_score, WIDTH - 300, 20, 2, COLOR_SCORE);
+            draw_number(surface, high_score, WIDTH - 300, 20, 2, COLOR_HISCORE);
         }
 
         if (game_state == STATE_GAMEOVER) {
