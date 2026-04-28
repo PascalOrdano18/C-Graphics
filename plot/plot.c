@@ -15,7 +15,7 @@
 
 static inline int sx(double x, double cx, double zoom){
     return (int) llround((x - cx) * zoom + WIDTH / 2.0);
-
+}
 static inline int sy(double y, double cy, double zoom){
     return (int) llround(HEIGHT / 2.0 - (y - cy) * zoom);
 }
@@ -58,6 +58,21 @@ void draw_function(SDL_Surface* surface, Uint32 color, double cx, double cy, dou
             SDL_FillRect(surface, &point, color);
        }
    } 
+}
+
+
+void draw_derivative(SDL_Surface* surface, Uint32 color, double cx, double cy, double zoom, double (*f)(double)){
+    double h = 0.00001;
+    for(int px = 0; px < WIDTH; px++){
+        double x = cx + (px - WIDTH / 2.0) / zoom;
+        double y = ((f(x + h) - f(x - h)) / (2 * h)); 
+
+        int py = sy(y, cy, zoom);
+        if(py >= 0 && py < HEIGHT){
+            SDL_Rect point = (SDL_Rect) { px, py, 1, 1 };
+            SDL_FillRect(surface, &point, color);
+        }
+    }
 }
 
 
@@ -112,9 +127,13 @@ int main(int argc, char* argv[]){
        SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
        draw_axis(surface, cx, cy, zoom);
        draw_function(surface, COLOR_GREEN, cx, cy, zoom, cuadratica);
-       draw_function(surface, COLOR_BLUE, cx, cy, zoom, cos);
-       draw_function(surface, COLOR_WHITE, cx, cy, zoom, sin);
-       draw_function(surface, COLOR_RED, cx, cy, zoom, tan);
+       draw_derivative(surface, COLOR_RED, cx, cy, zoom, cuadratica);
+       // draw_function(surface, COLOR_BLUE, cx, cy, zoom, cos);
+       // draw_function(surface, COLOR_WHITE, cx, cy, zoom, sin);
+       draw_function(surface, COLOR_GREEN, cx, cy, zoom, tan);
+       draw_derivative(surface, COLOR_RED, cx, cy, zoom, tan);
+
+       
 
        SDL_UpdateWindowSurface(window);
    }
